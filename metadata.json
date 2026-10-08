@@ -1,0 +1,6 @@
+{
+  "name": "SIM-SARPRAS - Sistem Informasi Sarana & Prasarana",
+  "description": "Aplikasi manajemen sarana dan prasarana terpadu: inventaris aset, peminjaman barang, reservasi ruangan, tiket pemeliharaan, cetak label QR/barcode, dan pelaporan BMN/KIB.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

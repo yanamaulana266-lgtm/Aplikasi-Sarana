@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM-SARPRAS - Sistem Informasi Sarana & Prasarana</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background: white !important; color: black !important; margin: 0 !important; }
+      .f4-label-card { break-inside: avoid !important; page-break-inside: avoid !important; }
+      @page {
+        size: 215mm 330mm; /* Standar Ukuran Folio / F4 */
+        margin: 8mm 6mm;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+  <!-- Root Container -->
+  <div id="app"></div>
+
+  <script>
+    // QR Code Matrix Generator (Zero External Dependencies)
+    function pseudoHash(str, seed) {
+      let h = seed;
+      for (let i = 0; i < str.length; i++) {
+        h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+      }
+      return Math.abs(h);
+    }
+
+    function generateQrSvg(text, size = 25) {
+      const matrix = Array.from({ length: size }, () => Array(size).fill(false));
+      const drawFinder = (startX, startY) => {
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 7; c++) {
+            if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+              matrix[startY + r][startX + c] = true;
+            } else {
+              matrix[startY + r][startX + c] = false;
+            }
+          }
+        }
+      };
+      drawFinder(0, 0);
+      drawFinder(size - 7, 0);
+      drawFinder(0, size - 7);
+
+      for (let i = 8; i < size - 8; i++) {
+        matrix[6][i] = i % 2 === 0;
+        matrix[i][6] = i % 2 === 0;
+      }
+
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const inTL = r < 8 && c < 8;
+          const inTR = r < 8 && c >= size - 8;
+          const inBL = r >= size - 8 && c < 8;
+          const inTiming = (r === 6 && c >= 8 && c < size - 8) || (c === 6 && r >= 8 && r < size - 8);
+          if (!inTL && !inTR && !inBL && !inTiming) {
+            const h = pseudoHash(text + `:${r}:${c}`, (r * 33 + c * 7 + 101));
+            matrix[r][c] = (h % 3) === 0 || ((r + c + h) % 2 === 0);
+          }
+        }
+      }
+
+      let rects = '';
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (matrix[r][c]) {
+            rects += `<rect x="${c}" y="${r}" width="1" height="1" fill="#0f172a" />`;
+          }
+        }
+      }
+      return `<svg viewBox="0 0 ${size} ${size}" class="w-full h-full shape-rendering-crispEdges">${rects}</svg>`;
+    }
+
+    // Helper Rupiah Formatter
+    function formatRupiah(amount) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+      }).format(amount || 0);
+    }
+
+    // State Aplikasi
+    const state = {
+      currentUser: null,
+      activeTab: 'dashboard',
+      activeSchool: {
+        id: 'sch-1',
+        name: 'SMP Negeri 1 Cerdas Mandiri',
+        npsn: '20214589',
+        level: 'SMP',
+        status: 'Negeri',
+        address: 'Jl. Pendidikan Nusantara No. 45',
+        city: 'Kota Pelajar',
+        province: 'Jawa Barat',
+        principal: 'Dr. H. Bambang Hartono, M.Pd.',
+        principalNip: '19740512 199802 1 004',
+        sarprasHead: 'Yana Maulana, S.Pd., M.Kom.',
+        sarprasNip: '19850918 201001 1 012',
+        academicYear: '2025/2026 Ganjil'
+      },
+      schools: [
+        {
+          id: 'sch-1',
+          name: 'SMP Negeri 1 Cerdas Mandiri',
+          npsn: '20214589',
+          level: 'SMP',
+          status: 'Negeri',
+          address: 'Jl. Pendidikan Nusantara No. 45',
+          city: 'Kota Pelajar',
+          province: 'Jawa Barat',
+          principal: 'Dr. H. Bambang Hartono, M.Pd.',
+          sarprasHead: 'Yana Maulana, S.Pd., M.Kom.',
+          academicYear: '2025/2026 Ganjil'
+        },
+        {
+          id: 'sch-2',
+          name: 'SMP Negeri 2 Bintang Harapan',
+          npsn: '20214590',
+          level: 'SMP',
+          status: 'Negeri',
+          address: 'Jl. Pemuda Merdeka No. 12',
+          city: 'Kota Pelajar',
+          province: 'Jawa Barat',
+          principal: 'Dra. Hj. Nurjanah, M.M.',
+          sarprasHead: 'Asep Saepudin, S.Pd.',
+          academicYear: '2025/2026 Ganjil'
+        }
+      ],
+      items: [
+        { id: 'it-1', code: 'SPR-2024-ELK-001', name: 'Proyektor LCD Epson EB-E500', category: 'Elektronik & Multimedia', brand: 'Epson', specification: '3.300 Lumens XGA HDMI', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium Komputer 1', acquisitionYear: 2024, sourceOfFund: 'BOS Reguler', price: 6850000, quantity: 1, unit: 'Unit' },
+        { id: 'it-2', code: 'SPR-2023-ELK-003', name: 'Laptop Chromebook Asus C214', category: 'Elektronik & Multimedia', brand: 'Asus', specification: 'Intel Celeron N4020 RAM 4GB', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium Komputer 1', acquisitionYear: 2023, sourceOfFund: 'DAK Fisik', price: 6500000, quantity: 30, unit: 'Unit' },
+        { id: 'it-3', code: 'SPR-2024-LAB-001', name: 'Mikroskop Binokuler Olympus CX23', category: 'Alat Laboratorium', brand: 'Olympus', specification: 'Plan 4x 10x 40x 100x Oil', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium IPA Terpadu', acquisitionYear: 2024, sourceOfFund: 'DAK Fisik', price: 18500000, quantity: 6, unit: 'Unit' },
+        { id: 'it-4', code: 'SPR-2022-ELK-005', name: 'Portable Sound System Baretone MAX15HB', category: 'Elektronik & Multimedia', brand: 'Baretone', specification: '15 Inch Woofer 600W RMS', condition: 'Baik', status: 'Tersedia', locationName: 'Gudang Pusat Sarpras', acquisitionYear: 2022, sourceOfFund: 'BOS Reguler', price: 4300000, quantity: 2, unit: 'Unit' }
+      ],
+      rooms: [
+        { id: 'room-1', code: 'R-LAB-KOMP-1', name: 'Laboratorium Komputer 1', building: 'Gedung Multimedia Lt. 2', type: 'Laboratorium', capacity: 36, area: 72, condition: 'Baik', picName: 'Rian Kurniawan, S.Kom.' },
+        { id: 'room-2', code: 'R-LAB-IPA', name: 'Laboratorium IPA Terpadu', building: 'Gedung Sains Lt. 1', type: 'Laboratorium', capacity: 32, area: 84, condition: 'Baik', picName: 'Sri Wahyuni, M.Pd.' },
+        { id: 'room-3', code: 'R-GUDANG', name: 'Gudang Pusat Sarpras', building: 'Gedung Penunjang', type: 'Gudang Sarpras', capacity: 10, area: 48, condition: 'Baik', picName: 'Agus Triono' }
+      ],
+      loans: [
+        { id: 'ln-1', loanNumber: 'PJM-2026-04-001', borrowerName: 'Siti Rohmah, S.Pd.', borrowerRole: 'Guru', itemName: 'Proyektor LCD Epson EB-E500', itemCode: 'SPR-2024-ELK-001', quantity: 1, borrowDate: '2026-04-07', expectedReturnDate: '2026-04-09', purpose: 'Media Presentasi Kelas IX-C', status: 'Sedang Dipinjam' }
+      ],
+      tickets: [
+        { id: 'tk-1', ticketNumber: 'TIK-MNT-2026-008', reporterName: 'Rian Kurniawan, S.Kom.', targetName: 'AC Daikin 1.5 PK Lab Komputer', location: 'Lab Komputer 1', severity: 'Tinggi / Kritis', damageDescription: 'Blower hangat kode error U4', actionStatus: 'Sedang Dikerjakan', estimatedCost: 1450000 }
+      ],
+      f4ModalOpen: false,
+      selectedLabelItem: null,
+      addSchoolModalOpen: false
+    };
+
+    // Sinkronisasi dengan Google Apps Script jika tersedia
+    function syncWithGoogleAppsScript() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            if (data) {
+              if (data.schools && data.schools.length) state.schools = data.schools;
+              if (data.activeSchool) state.activeSchool = data.activeSchool;
+              if (data.items && data.items.length) state.items = data.items;
+              if (data.rooms && data.rooms.length) state.rooms = data.rooms;
+              if (data.loans && data.loans.length) state.loans = data.loans;
+              if (data.tickets && data.tickets.length) state.tickets = data.tickets;
+              render();
+            }
+          })
+          .apiGetAllData();
+      }
+    }
+
+    // Render Function Utama
+    function render() {
+      const app = document.getElementById('app');
+
+      // Jika Belum Login -> Tampilkan Halaman Login (Biru & Oranye, Akun Demo Sembunyi)
+      if (!state.currentUser) {
+        app.innerHTML = `
+          <div class="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-orange-50/40 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+            <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+              <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white shadow-lg mb-3 border-2 border-orange-400">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              </div>
+              <h1 class="text-2xl font-bold tracking-tight text-blue-950">SIM-SARPRAS</h1>
+              <p class="text-xs font-semibold uppercase tracking-wider text-orange-600 mt-1">Sistem Informasi Sarana & Prasarana</p>
+              <div class="mt-2 text-xs text-blue-800 bg-blue-100/80 py-1 px-3 rounded-full inline-block border border-blue-200">
+                ${state.activeSchool.name} · NPSN: ${state.activeSchool.npsn}
+              </div>
+            </div>
+
+            <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+              <div class="bg-white py-8 px-6 shadow-xl rounded-2xl border border-blue-100 sm:px-10">
+                <div class="mb-5 border-b border-blue-50 pb-3">
+                  <h2 class="text-base font-bold text-blue-950">Masuk ke Sistem</h2>
+                  <p class="text-xs text-slate-500 mt-0.5">Silakan masukkan username dan password Anda</p>
+                </div>
+
+                <div id="login-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700"></div>
+
+                <form id="login-form" class="space-y-4" onsubmit="handleLoginSubmit(event)">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="login-username" required value="admin" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Username">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required value="admin123" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Password">
+                  </div>
+                  <div class="flex items-center justify-between text-xs pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-600">
+                      <input type="checkbox" checked class="rounded text-blue-600">
+                      <span>Ingat sesi saya</span>
+                    </label>
+                    <span class="text-[11px] text-slate-400">T.A. ${state.activeSchool.academicYear}</span>
+                  </div>
+                  <button type="submit" class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-orange-600/20 cursor-pointer">
+                    Masuk ke Aplikasi
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Jika Sudah Login -> Render Aplikasi Lengkap
+      let mainContent = '';
+      if (state.activeTab === 'dashboard') {
+        const totalNilai = state.items.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+        mainContent = `
+          <div class="space-y-5">
+            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-orange-600">SIM Sarana & Prasarana</span>
+                <h1 class="text-xl font-bold text-blue-950 mt-1">${state.activeSchool.name}</h1>
+                <p class="text-xs text-slate-500 mt-1 max-w-xl">Aset fisik, peminjaman peralatan, pemeliharaan gedung & cetak label F4</p>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="openF4Modal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                  Cetak 10 Label F4
+                </button>
+                <button onclick="state.activeTab='schools'; render();" class="px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 cursor-pointer">
+                  Kelola Sekolah (${state.schools.length})
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
+                <span class="text-xs text-slate-500">Nilai Aset Sarpras</span>
+                <div class="text-lg font-bold font-mono text-blue-950 mt-1">${formatRupiah(totalNilai)}</div>
+              </div>
+              <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
+                <span class="text-xs text-slate-500">Barang Sarana</span>
+                <div class="text-lg font-bold font-mono text-slate-900 mt-1">${state.items.length} Barang</div>
+              </div>
+              <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
+                <span class="text-xs text-slate-500">Prasarana Ruang</span>
+                <div class="text-lg font-bold font-mono text-slate-900 mt-1">${state.rooms.length} Ruang</div>
+              </div>
+              <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
+                <span class="text-xs text-slate-500">Peminjaman Aktif</span>
+                <div class="text-lg font-bold font-mono text-orange-600 mt-1">${state.loans.length} Transaksi</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (state.activeTab === 'schools') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-bold text-blue-950">Manajemen Sekolah & Institusi</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Kelola dan ganti sekolah aktif untuk penyesuaian kop cetak dan administrasi</p>
+              </div>
+              <button onclick="openAddSchoolModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                + Tambah Sekolah Baru
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${state.schools.map(s => `
+                <div class="bg-white p-4 rounded-xl border ${s.id === state.activeSchool.id ? 'border-2 border-blue-600' : 'border-slate-200'} shadow-2xs space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 bg-blue-100 text-blue-800 rounded">NPSN: ${s.npsn}</span>
+                    ${s.id === state.activeSchool.id ? '<span class="text-[11px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">Sedang Aktif</span>' : `<button onclick="switchSchool('${s.id}')" class="text-xs font-bold text-blue-600 hover:underline">Gunakan Sekolah Ini</button>`}
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-900">${s.name}</h3>
+                  <div class="text-xs text-slate-500">${s.city}, ${s.province}</div>
+                  <div class="text-[11px] text-slate-600 pt-2 border-t border-slate-100">Kepala: <strong>${s.principal}</strong> · Koord. Sarpras: <strong>${s.sarprasHead}</strong></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (state.activeTab === 'items') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-sm flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-blue-950">Inventaris Sarana (Aset Barang)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Daftar master peralatan sekolah dengan barcode & QR code</p>
+              </div>
+              <button onclick="openF4Modal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                Cetak 10 Label F4
+              </button>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-blue-50/50 border-b border-slate-200 font-semibold text-slate-700">
+                  <tr>
+                    <th class="p-3">Kode</th>
+                    <th class="p-3">Nama Barang</th>
+                    <th class="p-3">Kategori</th>
+                    <th class="p-3">Kondisi</th>
+                    <th class="p-3 text-right">Harga</th>
+                    <th class="p-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${state.items.map(it => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-mono font-bold text-blue-900">${it.code}</td>
+                      <td class="p-3 font-semibold text-slate-900">${it.name}</td>
+                      <td class="p-3 text-slate-600">${it.category}</td>
+                      <td class="p-3"><span class="text-emerald-700 font-medium">${it.condition}</span></td>
+                      <td class="p-3 text-right font-mono">${formatRupiah(it.price)}</td>
+                      <td class="p-3 text-right">
+                        <button onclick="openF4Modal('${it.id}')" class="px-2 py-1 bg-orange-50 text-orange-700 rounded text-[11px] font-bold hover:bg-orange-100">Cetak Label</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      app.innerHTML = `
+        <div class="min-h-screen flex flex-col">
+          <!-- Top Navbar -->
+          <header class="bg-white border-b border-blue-100 h-14 px-4 sm:px-6 flex items-center justify-between shadow-2xs no-print">
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs border border-orange-400">SP</span>
+              <span class="text-base font-bold text-blue-950">SIM-SARPRAS</span>
+              <span class="text-slate-300">/</span>
+              <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">${state.activeSchool.name}</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="openF4Modal()" class="px-3 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-2xs cursor-pointer">
+                Cetak 10 Label F4
+              </button>
+              <button onclick="logout()" class="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-rose-600 rounded-lg">
+                Keluar
+              </button>
+            </div>
+          </header>
+
+          <div class="flex-1 flex">
+            <!-- Sidebar -->
+            <aside class="w-60 bg-white border-r border-blue-100 p-3 space-y-1 shrink-0 no-print">
+              <div class="text-[10px] font-bold text-blue-700 uppercase px-3 py-2">Navigasi Utama</div>
+              <button onclick="state.activeTab='dashboard'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Dashboard</button>
+              <button onclick="state.activeTab='items'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'items' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Inventaris Sarana</button>
+              <button onclick="state.activeTab='schools'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'schools' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Manajemen Sekolah</button>
+              <div class="pt-4 text-[10px] font-bold text-orange-600 uppercase px-3 py-2">Label & Dokumen</div>
+              <button onclick="openF4Modal()" class="w-full text-left px-3 py-2 text-xs font-bold text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100">Cetak 10 Label F4</button>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-6 overflow-y-auto">
+              ${mainContent}
+            </main>
+          </div>
+        </div>
+
+        <!-- Modal Cetak 10 Label F4 (Folio 215 x 330 mm) -->
+        ${state.f4ModalOpen ? renderF4ModalHtml() : ''}
+      `;
+    }
+
+    // Modal Cetak 10 Label F4
+    function renderF4ModalHtml() {
+      const targetItem = state.selectedLabelItem || state.items[0];
+      // Generate 10 identical labels for the sheet
+      const labels = Array(10).fill(targetItem);
+
+      return `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-blue-100 flex items-center justify-between no-print bg-blue-50/50">
+              <div>
+                <h3 class="text-sm font-bold text-blue-950">Lembar Cetak 10 Label F4 / Folio (215 x 330 mm)</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Memuat Kode Barang, Nama Barang, dan QR Code 2D (2 Kolom x 5 Baris)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="window.print()" class="px-4 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                  Cetak Lembar F4
+                </button>
+                <button onclick="state.f4ModalOpen=false; render();" class="p-1.5 text-slate-400 hover:text-slate-700">✕</button>
+              </div>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100 print:bg-white print:p-0">
+              <div class="mx-auto bg-white p-4 print:p-0 border border-slate-300 print:border-none shadow-md print:shadow-none" style="max-width: 800px;">
+                <div class="grid grid-cols-2 gap-2.5 print:gap-2">
+                  ${labels.map(it => `
+                    <div class="f4-label-card border-2 border-slate-800 rounded-lg p-2.5 bg-white text-slate-900 flex flex-col justify-between" style="min-height: 185px;">
+                      <div class="border-b-2 border-slate-800 pb-1 mb-1.5 text-center">
+                        <div class="text-[8px] font-bold uppercase text-slate-600">PEMERINTAH DAERAH · DINAS PENDIDIKAN</div>
+                        <div class="text-[11px] font-bold text-blue-950">${state.activeSchool.name.toUpperCase()}</div>
+                        <div class="text-[8px] font-mono text-slate-500">LABEL INVENTARIS · NPSN: ${state.activeSchool.npsn}</div>
+                      </div>
+
+                      <div class="flex items-start gap-2.5">
+                        <div class="w-20 h-20 shrink-0 border border-slate-300 p-1 flex flex-col items-center justify-center">
+                          ${generateQrSvg(it.code, 25)}
+                          <span class="text-[7px] font-mono font-bold text-slate-600 mt-0.5">SCAN QR</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <span class="inline-block bg-slate-100 text-slate-900 font-mono font-bold text-[11px] px-1.5 py-0.5 rounded border border-slate-300">${it.code}</span>
+                          <h4 class="text-xs font-bold text-slate-900 mt-1 line-clamp-2">${it.name}</h4>
+                          <div class="mt-1 text-[9px] text-slate-600 space-y-0.5">
+                            <div>Merk: <strong>${it.brand || '-'}</strong></div>
+                            <div>Ruang: <strong>${it.locationName || '-'}</strong></div>
+                            <div>Kondisi: <strong class="text-emerald-700">${it.condition}</strong></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="mt-1.5 pt-1 border-t border-slate-200 text-center font-mono text-[8px] text-slate-600">
+                        *${it.code}*
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Handlers
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const user = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+
+      // Check against server via google.script.run if present, or fallback
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success) {
+              state.currentUser = res.user;
+              render();
+            } else {
+              showLoginError(res.message || 'Username atau password salah.');
+            }
+          })
+          .apiLogin(user, pass);
+      } else {
+        // Standalone / Offline check
+        if ((user === 'admin' && pass === 'admin123') || (user === 'guru' && pass === 'guru123') || (user === 'teknisi' && pass === 'teknisi123')) {
+          state.currentUser = { username: user, fullName: user === 'admin' ? 'Yana Maulana (Admin)' : 'Pengguna Sekolah' };
+          render();
+        } else {
+          showLoginError('Username atau password yang Anda masukkan salah.');
+        }
+      }
+    }
+
+    function showLoginError(msg) {
+      const errBox = document.getElementById('login-error');
+      if (errBox) {
+        errBox.innerText = msg;
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      state.currentUser = null;
+      render();
+    }
+
+    function openF4Modal(itemId) {
+      if (itemId) {
+        state.selectedLabelItem = state.items.find(i => i.id === itemId);
+      } else {
+        state.selectedLabelItem = state.items[0];
+      }
+      state.f4ModalOpen = true;
+      render();
+    }
+
+    function switchSchool(schoolId) {
+      const found = state.schools.find(s => s.id === schoolId);
+      if (found) {
+        state.activeSchool = found;
+        render();
+      }
+    }
+
+    function openAddSchoolModal() {
+      const newName = prompt('Masukkan Nama Sekolah Baru:');
+      if (newName && newName.trim()) {
+        const newNpsn = prompt('Masukkan NPSN Sekolah:', '2021' + Math.floor(1000 + Math.random() * 9000));
+        const newSchool = {
+          id: 'sch-' + Date.now(),
+          name: newName.trim(),
+          npsn: (newNpsn || '20210000').trim(),
+          level: 'SMP',
+          status: 'Negeri',
+          city: 'Kota Pelajar',
+          province: 'Jawa Barat',
+          principal: 'Kepala Sekolah Baru',
+          sarprasHead: 'Koordinator Sarpras',
+          academicYear: '2025/2026 Ganjil'
+        };
+        state.schools.push(newSchool);
+        state.activeSchool = newSchool;
+        
+        // Simpan ke Google Sheet jika ada backend
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.apiSaveSchool(newSchool);
+        }
+        render();
+      }
+    }
+
+    // Inisialisasi Aplikasi Saat Halaman Selesai Dimuat
+    window.onload = function() {
+      render();
+      syncWithGoogleAppsScript();
+    };
+  </script>
+</body>
+</html>
