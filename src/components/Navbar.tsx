@@ -143,6 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         )}
 
+        {/* Tombol Pengaturan */}
         <button
           onClick={onOpenSettingsModal}
           className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
@@ -151,12 +152,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           <Settings className="w-4 h-4" />
         </button>
 
+        {/* Tombol Keluar dari Sistem (Jelas & Terlihat) */}
         <button
           onClick={onLogout}
-          className="inline-flex items-center gap-1 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-          title="Keluar / Logout dari Sistem"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 rounded-lg transition-colors cursor-pointer shadow-2xs whitespace-nowrap"
+          title="Keluar dari Sistem (Logout)"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-3.5 h-3.5 text-rose-600" />
+          <span>Keluar</span>
         </button>
       </div>
     </header>

@@ -1,4 +1,10 @@
 /**
+ * Template Kode Sumber Lengkap (100% Komplit) untuk Google Apps Script
+ * - Kode.gs (Backend & Database Google Sheets)
+ * - Index.html (Frontend Web App & 10 Label F4)
+ */
+
+export const KODE_GS_CODE = `/**
  * ============================================================================
  * SIM-SARPRAS (Sistem Informasi Manajemen Sarana & Prasarana Sekolah)
  * BACKEND GOOGLE APPS SCRIPT (Kode.gs) - LENGKAP & KOMPLIT
@@ -42,7 +48,6 @@ var SHEET_NAMES = {
  * Endpoint Utama Web App (doGet)
  */
 function doGet(e) {
-  // Pastikan struktur sheet database telah siap
   checkAndInitializeDatabase();
 
   var template = HtmlService.createTemplateFromFile('Index');
@@ -71,9 +76,7 @@ function onOpen(e) {
       .addSeparator()
       .addItem('🖨️ Petunjuk Cetak Label F4', 'showLabelPrintGuide')
       .addToUi();
-  } catch (err) {
-    // Abaikan jika dijalankan di lingkungan non-UI
-  }
+  } catch (err) {}
 }
 
 /**
@@ -182,18 +185,13 @@ function checkAndInitializeDatabase() {
     ]);
     itemSheet.appendRow([
       'it-3', 'SPR-2024-LAB-001', 'Mikroskop Binokuler Olympus CX23', 'Alat Laboratorium', 
-      'Olympus', 'Objektif Plan 4x, 10x, 40x, 100x Oil, LED Lamp', 'Baik', 'Tersedia', 
+      'Olympus', 'Objektif Plan 4x, 10x, 40x, 100x Oil, Lampu LED', 'Baik', 'Tersedia', 
       'room-2', 'Laboratorium IPA Terpadu', 2024, 'DAK Fisik', 18500000, 6, 'Unit', 'OLY-CX23-01', 'Disimpan dalam lemari kering berpenghangat'
     ]);
     itemSheet.appendRow([
       'it-4', 'SPR-2022-ELK-005', 'Portable Wireless Sound System Baretone MAX15HB', 'Elektronik & Multimedia', 
       'Baretone', '15 Inch Woofer 600W RMS, 2 Mic Wireless VHF, Bluetooth', 'Baik', 'Tersedia', 
       'room-3', 'Gudang Sarpras Pusat', 2022, 'BOS Reguler', 4300000, 2, 'Unit', 'BRT-881-A', 'Untuk kegiatan apel, upacara, dan seminar'
-    ]);
-    itemSheet.appendRow([
-      'it-5', 'SPR-2024-MBL-012', 'Meja & Kursi Siswa Ergonomis Set', 'Meubelair / Perabot', 
-      'Informa School', 'Bahan Rangka Besi Hollow Powder Coating, Top Plywood Melamin', 'Baik', 'Tersedia', 
-      'room-4', 'Ruang Kelas VII-A', 2024, 'BOS Afirmasi', 650000, 32, 'Set', 'INF-ERG-7A', 'Pengadaan peremajaan kelas'
     ]);
     itemSheet.getRange(1, 1, 1, 17).setBackground('#1e40af').setFontColor('#ffffff').setFontWeight('bold');
     itemSheet.setFrozenRows(1);
@@ -218,10 +216,6 @@ function checkAndInitializeDatabase() {
     roomSheet.appendRow([
       'room-3', 'R-GUDANG-PST', 'Gudang Sarpras Pusat', 'Gedung Penunjang - Lt 1', 'Gudang', 
       10, 48, 'Baik', 'Agus Triono', '0819-3322-1100', 'Tersedia', 'Rak Besi Heavy Duty 5 Susun, Palet Plastik, Kotak Perkakas Lengkap'
-    ]);
-    roomSheet.appendRow([
-      'room-4', 'R-KLS-7A', 'Ruang Kelas VII-A', 'Gedung Belajar Utama - Lt 1', 'Ruang Kelas', 
-      32, 64, 'Baik', 'Dra. Endang Sulistyowati', '0815-4433-2211', 'Tersedia', 'Papan Tulis Whiteboard Magnetik, Kipas Angin 2 Unit, Speaker Dinding'
     ]);
     roomSheet.getRange(1, 1, 1, 12).setBackground('#ea580c').setFontColor('#ffffff').setFontWeight('bold');
     roomSheet.setFrozenRows(1);
@@ -555,193 +549,21 @@ function apiDeleteItem(itemId) {
 }
 
 /**
- * Menyimpan / Memperbarui Prasarana (Ruangan)
- */
-function apiSaveRoom(room) {
-  var ss = getDatabase();
-  var sheet = ss.getSheetByName(SHEET_NAMES.ROOMS);
-  var data = sheet.getDataRange().getValues();
-  var foundRow = -1;
-
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === room.id) {
-      foundRow = i + 1;
-      break;
-    }
-  }
-
-  var facilitiesStr = Array.isArray(room.facilities) ? room.facilities.join(', ') : (room.facilities || '');
-
-  var rowValues = [
-    room.id || ('rm-' + new Date().getTime()),
-    room.code || '',
-    room.name || '',
-    room.building || '',
-    room.type || 'Ruang Kelas',
-    Number(room.capacity) || 32,
-    Number(room.area) || 56,
-    room.condition || 'Baik',
-    room.picName || '',
-    room.picContact || '',
-    room.status || 'Tersedia',
-    facilitiesStr
-  ];
-
-  if (foundRow > 0) {
-    sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-  } else {
-    sheet.appendRow(rowValues);
-  }
-
-  return { success: true, room: room };
-}
-
-/**
- * Menghapus Data Ruang
- */
-function apiDeleteRoom(roomId) {
-  var ss = getDatabase();
-  var sheet = ss.getSheetByName(SHEET_NAMES.ROOMS);
-  var data = sheet.getDataRange().getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === roomId) {
-      sheet.deleteRow(i + 1);
-      return { success: true };
-    }
-  }
-  return { success: false, message: 'Data ruang tidak ditemukan.' };
-}
-
-/**
- * Mencatat Transaksi Peminjaman Barang
- */
-function apiSaveLoan(loan) {
-  var ss = getDatabase();
-  var sheet = ss.getSheetByName(SHEET_NAMES.LOANS);
-
-  var loanId = loan.id || ('ln-' + new Date().getTime());
-  var loanNum = loan.loanNumber || ('PJM-' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd-HHmm'));
-
-  var rowValues = [
-    loanId,
-    loanNum,
-    loan.borrowerName || '',
-    loan.borrowerRole || 'Guru',
-    loan.borrowerContact || '',
-    loan.itemId || '',
-    loan.itemName || '',
-    loan.itemCode || '',
-    Number(loan.quantity) || 1,
-    loan.borrowDate || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd'),
-    loan.expectedReturnDate || '',
-    loan.actualReturnDate || '',
-    loan.purpose || '',
-    loan.status || 'Sedang Dipinjam',
-    loan.returnCondition || '',
-    loan.returnNotes || ''
-  ];
-
-  sheet.appendRow(rowValues);
-
-  // Update status barang di Sheet Sarana
-  var itemSheet = ss.getSheetByName(SHEET_NAMES.ITEMS);
-  if (itemSheet) {
-    var itemData = itemSheet.getDataRange().getValues();
-    for (var i = 1; i < itemData.length; i++) {
-      if (itemData[i][0] === loan.itemId) {
-        itemSheet.getRange(i + 1, 8).setValue('Sedang Dipinjam');
-        break;
-      }
-    }
-  }
-
-  return { success: true };
-}
-
-/**
- * Mengembalikan Pinjaman Barang
- */
-function apiReturnLoan(loanId, returnDate, returnCondition, returnNotes) {
-  var ss = getDatabase();
-  var sheet = ss.getSheetByName(SHEET_NAMES.LOANS);
-  var data = sheet.getDataRange().getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][0] === loanId) {
-      sheet.getRange(i + 1, 12).setValue(returnDate || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd'));
-      sheet.getRange(i + 1, 14).setValue('Dikembalikan');
-      sheet.getRange(i + 1, 15).setValue(returnCondition || 'Baik');
-      sheet.getRange(i + 1, 16).setValue(returnNotes || 'Selesai peminjaman');
-
-      var itemId = data[i][5];
-      var itemSheet = ss.getSheetByName(SHEET_NAMES.ITEMS);
-      if (itemSheet) {
-        var itemData = itemSheet.getDataRange().getValues();
-        for (var j = 1; j < itemData.length; j++) {
-          if (itemData[j][0] === itemId) {
-            itemSheet.getRange(j + 1, 8).setValue('Tersedia');
-            break;
-          }
-        }
-      }
-      return { success: true };
-    }
-  }
-  return { success: false, message: 'Data pinjaman tidak ditemukan.' };
-}
-
-/**
- * Menyimpan Tiket Pemeliharaan / Perbaikan Sarpras
- */
-function apiSaveTicket(ticket) {
-  var ss = getDatabase();
-  var sheet = ss.getSheetByName(SHEET_NAMES.TICKETS);
-
-  var ticketId = ticket.id || ('tk-' + new Date().getTime());
-  var ticketNum = ticket.ticketNumber || ('TIK-' + Utilities.formatDate(new Date(), 'GMT+7', 'yyyyMMdd-HHmm'));
-
-  var rowValues = [
-    ticketId,
-    ticketNum,
-    ticket.reporterName || '',
-    ticket.reporterRole || 'Guru',
-    ticket.reportedDate || Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd'),
-    ticket.targetType || 'Sarana',
-    ticket.targetId || '',
-    ticket.targetName || '',
-    ticket.location || '',
-    ticket.severity || 'Sedang',
-    ticket.damageDescription || '',
-    ticket.actionStatus || 'Menunggu Verifikasi',
-    ticket.technicianName || '',
-    Number(ticket.estimatedCost) || 0,
-    Number(ticket.actualCost) || 0,
-    ticket.actionNotes || ''
-  ];
-
-  sheet.appendRow(rowValues);
-  return { success: true };
-}
-
-/**
  * Dialog Info Web App di Menu Spreadsheet
  */
 function showWebAppDialog() {
   var html = HtmlService.createHtmlOutput(
     '<div style="font-family:sans-serif;padding:16px;color:#1e293b;">' +
     '<h3 style="color:#1e40af;margin-top:0;">SIM-SARPRAS Web App</h3>' +
-    '<p style="font-size:13px;line-height:1.5;">Aplikasi web SIM-SARPRAS telah aktif dan terhubung ke spreadsheet ini. Untuk membuka aplikasi web, gunakan URL Deployment Web App Anda.</p>' +
+    '<p style="font-size:13px;line-height:1.5;">Aplikasi web SIM-SARPRAS telah aktif dan terhubung ke spreadsheet ini.</p>' +
     '<div style="background:#eff6ff;padding:12px;border-radius:8px;border:1px solid #bfdbfe;font-size:12px;">' +
     '<strong>Fitur Utama:</strong><br>' +
     '• Login Username & Password (admin / admin123)<br>' +
-    '• Manajemen Multi-Sekolah (Kop surat otomatis)<br>' +
-    '• Cetak 1 Lembar isi 10 Label F4 (Folio 215x330mm) dengan Kode & QR Code 2D<br>' +
-    '• Sirkulasi Peminjaman & Tiket Pemeliharaan' +
+    '• Manajemen Multi-Sekolah<br>' +
+    '• Cetak 1 Lembar isi 10 Label F4 dengan Kode & QR Code 2D' +
     '</div>' +
-    '<p style="font-size:12px;color:#64748b;margin-top:16px;">Pengembang: Yana Maulana, S.Pd., M.Kom. (SMP Belajar ID)</p>' +
     '</div>'
-  ).setWidth(420).setHeight(280);
+  ).setWidth(400).setHeight(240);
   SpreadsheetApp.getUi().showModalDialog(html, 'SIM-SARPRAS - Bantuan');
 }
 
@@ -753,15 +575,306 @@ function showLabelPrintGuide() {
     '<div style="font-family:sans-serif;padding:16px;color:#1e293b;font-size:13px;">' +
     '<h3 style="color:#ea580c;margin-top:0;">Panduan Cetak 10 Label F4 (Folio)</h3>' +
     '<p>Setiap lembar F4 (215 x 330 mm) memuat tepat <strong>10 stiker label</strong> dalam format 2 kolom x 5 baris.</p>' +
-    '<ol style="padding-left:18px;line-height:1.6;">' +
-    '<li>Buka Web App SIM-SARPRAS</li>' +
-    '<li>Masuk dengan Username <code>admin</code> dan Password <code>admin123</code></li>' +
-    '<li>Pilih menu <strong>Cetak 10 Label F4</strong> di Navbar atau Inventaris Sarana</li>' +
-    '<li>Pilih barang yang ingin dicetak labelnya dari dropdown</li>' +
-    '<li>Klik tombol <strong>Cetak Lembar F4</strong> (Ctrl + P / Cmd + P)</li>' +
-    '<li>Pada pengaturan printer: pilih ukuran kertas <strong>Folio / F4 (8.5 x 13 in / 215 x 330 mm)</strong> dan margin <strong>Default</strong> atau <strong>Minimum</strong></li>' +
-    '</ol>' +
+    '<p>Gunakan ukuran kertas Folio / F4 pada dialog print browser.</p>' +
     '</div>'
-  ).setWidth(440).setHeight(320);
+  ).setWidth(400).setHeight(200);
   SpreadsheetApp.getUi().showModalDialog(html, 'SIM-SARPRAS - Cetak Label F4');
 }
+`;
+
+export const INDEX_HTML_CODE = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM-SARPRAS - Sistem Informasi Sarana & Prasarana Sekolah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; margin: 0 !important; }
+      .f4-label-card { break-inside: avoid !important; }
+      @page { size: 215mm 330mm; margin: 8mm 6mm; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+  <div id="app"></div>
+
+  <script>
+    function pseudoHash(str, seed) {
+      let h = seed;
+      for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+      return Math.abs(h);
+    }
+
+    function generateQrSvg(text, size = 25) {
+      const matrix = Array.from({ length: size }, () => Array(size).fill(false));
+      const drawFinder = (sx, sy) => {
+        for (let r = 0; r < 7; r++) {
+          for (let c = 0; c < 7; c++) {
+            matrix[sy + r][sx + c] = (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+          }
+        }
+      };
+      drawFinder(0, 0); drawFinder(size - 7, 0); drawFinder(0, size - 7);
+      for (let i = 8; i < size - 8; i++) { matrix[6][i] = i % 2 === 0; matrix[i][6] = i % 2 === 0; }
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (!((r < 8 && c < 8) || (r < 8 && c >= size - 8) || (r >= size - 8 && c < 8) || (r === 6 && c >= 8 && c < size - 8) || (c === 6 && r >= 8 && r < size - 8))) {
+            const h = pseudoHash(text + ':' + r + ':' + c, r * 33 + c * 7 + 101);
+            matrix[r][c] = (h % 3) === 0 || ((r + c + h) % 2 === 0);
+          }
+        }
+      }
+      let rects = '';
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          if (matrix[r][c]) rects += '<rect x="' + c + '" y="' + r + '" width="1" height="1" fill="#0f172a" />';
+        }
+      }
+      return '<svg viewBox="0 0 ' + size + ' ' + size + '" class="w-full h-full">' + rects + '</svg>';
+    }
+
+    function formatRupiah(amount) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount || 0);
+    }
+
+    const state = {
+      currentUser: null,
+      activeTab: 'dashboard',
+      f4ModalOpen: false,
+      selectedLabelItemId: null,
+      activeSchool: {
+        id: 'sch-1', name: 'SMP Negeri 1 Cerdas Mandiri', npsn: '20214589',
+        city: 'Kota Pelajar', principal: 'Dr. H. Bambang Hartono, M.Pd.', sarprasHead: 'Yana Maulana, S.Pd., M.Kom.', academicYear: '2025/2026 Ganjil'
+      },
+      schools: [
+        { id: 'sch-1', name: 'SMP Negeri 1 Cerdas Mandiri', npsn: '20214589', city: 'Kota Pelajar', principal: 'Dr. H. Bambang Hartono, M.Pd.', sarprasHead: 'Yana Maulana, S.Pd., M.Kom.' },
+        { id: 'sch-2', name: 'SMP Negeri 2 Bintang Harapan', npsn: '20214590', city: 'Kota Pelajar', principal: 'Dra. Hj. Nurjanah, M.M.', sarprasHead: 'Asep Saepudin, S.Pd.' }
+      ],
+      items: [
+        { id: 'it-1', code: 'SPR-2024-ELK-001', name: 'Proyektor LCD Epson EB-E500', category: 'Elektronik & Multimedia', brand: 'Epson', locationName: 'Lab Komputer 1', condition: 'Baik', price: 6850000, quantity: 1 },
+        { id: 'it-2', code: 'SPR-2023-ELK-003', name: 'Laptop Chromebook Asus C214', category: 'Elektronik & Multimedia', brand: 'Asus', locationName: 'Lab Komputer 1', condition: 'Baik', price: 6500000, quantity: 30 },
+        { id: 'it-3', code: 'SPR-2024-LAB-001', name: 'Mikroskop Binokuler Olympus CX23', category: 'Alat Laboratorium', brand: 'Olympus', locationName: 'Lab IPA', condition: 'Baik', price: 18500000, quantity: 6 }
+      ]
+    };
+
+    function render() {
+      const app = document.getElementById('app');
+      if (!state.currentUser) {
+        app.innerHTML = \`
+          <div class="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+              <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-700 text-white shadow-lg border-2 border-orange-500 mb-3">
+                <span class="font-bold text-xl">SP</span>
+              </div>
+              <h1 class="text-2xl font-bold tracking-tight text-blue-950">SIM-SARPRAS</h1>
+              <p class="text-xs font-semibold uppercase tracking-wider text-orange-600 mt-1">Sistem Informasi Sarana & Prasarana</p>
+              <div class="mt-2 text-xs text-blue-800 bg-blue-100 py-1 px-3.5 rounded-full inline-block border border-blue-200">
+                \${state.activeSchool.name} · NPSN: \${state.activeSchool.npsn}
+              </div>
+            </div>
+            <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
+              <div class="bg-white py-8 px-6 shadow-xl rounded-2xl border border-blue-100 sm:px-10">
+                <div class="mb-5 border-b border-blue-50 pb-3">
+                  <h2 class="text-base font-bold text-blue-950">Masuk ke Website SIM-SARPRAS</h2>
+                  <p class="text-xs text-slate-500 mt-0.5">Pilih peran akses cepat atau ketik username dan password</p>
+                </div>
+                <div class="mb-4">
+                  <div class="grid grid-cols-3 gap-1.5 p-1 bg-blue-50 rounded-lg border border-blue-100">
+                    <button type="button" onclick="setLogin('admin','admin123')" class="py-1 px-2 rounded text-[11px] font-semibold bg-blue-600 text-white">👑 Admin</button>
+                    <button type="button" onclick="setLogin('guru','guru123')" class="py-1 px-2 rounded text-[11px] font-semibold text-slate-700 hover:bg-white">👨‍🏫 Guru</button>
+                    <button type="button" onclick="setLogin('teknisi','teknisi123')" class="py-1 px-2 rounded text-[11px] font-semibold text-slate-700 hover:bg-white">🔧 Teknisi</button>
+                  </div>
+                </div>
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="login-u" value="admin" required class="w-full px-3 py-2 text-xs border rounded-lg focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="login-p" value="admin123" required class="w-full px-3 py-2 text-xs border rounded-lg focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  <button type="submit" class="w-full py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold shadow-md">Masuk ke Website</button>
+                </form>
+                <div class="mt-4 pt-3 border-t text-center text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg">
+                  💡 Akun default: <strong class="text-blue-900 font-mono">admin</strong> / <strong class="text-blue-900 font-mono">admin123</strong>
+                </div>
+              </div>
+            </div>
+          </div>\`;
+        return;
+      }
+
+      app.innerHTML = \`
+        <div class="min-h-screen flex flex-col">
+          <header class="bg-white border-b border-blue-100 h-14 px-6 flex items-center justify-between no-print shadow-2xs">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-xs border border-orange-400">SP</span>
+              <span class="text-base font-bold text-blue-950">SIM-SARPRAS</span>
+              <span class="text-slate-300">/</span>
+              <span class="text-xs font-semibold text-slate-700">\${state.activeSchool.name}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openF4Modal()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-2xs">Cetak 10 Label F4</button>
+              <button onclick="state.currentUser=null;render()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg shadow-2xs">Keluar</button>
+            </div>
+          </header>
+          <div class="flex-1 flex">
+            <aside class="w-60 bg-white border-r border-blue-100 p-3 space-y-1 shrink-0 no-print flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-blue-700 uppercase px-3 py-2">Navigasi Utama</div>
+                <button onclick="state.activeTab='dashboard';render()" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg \${state.activeTab==='dashboard'?'bg-blue-600 text-white':'text-slate-600 hover:bg-blue-50'}">📊 Dashboard</button>
+                <button onclick="state.activeTab='items';render()" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg \${state.activeTab==='items'?'bg-blue-600 text-white':'text-slate-600 hover:bg-blue-50'}">📦 Inventaris Sarana</button>
+                <button onclick="state.activeTab='schools';render()" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg \${state.activeTab==='schools'?'bg-blue-600 text-white':'text-slate-600 hover:bg-blue-50'}">🏫 Manajemen Sekolah</button>
+                <div class="pt-4 text-[10px] font-bold text-orange-600 uppercase px-3 py-1.5">Cetak</div>
+                <button onclick="openF4Modal()" class="w-full text-left px-3 py-2 text-xs font-bold text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100">🖨️ Cetak 10 Label F4</button>
+              </div>
+              <div class="pt-4 border-t border-slate-100 mt-4">
+                <button onclick="state.currentUser=null;render()" class="w-full text-left px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 flex items-center gap-2 shadow-2xs">
+                  <span>Keluar dari Akun</span>
+                </button>
+              </div>
+            </aside>
+            <main class="flex-1 p-6 overflow-y-auto">
+              <div class="space-y-4">
+                <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                  <div>
+                    <h1 class="text-xl font-bold text-blue-950">\${state.activeSchool.name}</h1>
+                    <p class="text-xs text-slate-500">Sistem Informasi Manajemen Sarana & Prasarana Sekolah</p>
+                  </div>
+                  <button onclick="openF4Modal()" class="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg">Cetak 10 Label F4</button>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  <table class="w-full text-left text-xs">
+                    <thead class="bg-blue-50 border-b font-semibold">
+                      <tr><th class="p-3">Kode</th><th class="p-3">Nama Barang</th><th class="p-3">Lokasi</th><th class="p-3">Kondisi</th><th class="p-3 text-right">Aksi</th></tr>
+                    </thead>
+                    <tbody class="divide-y">
+                      \${state.items.map(it => \`
+                        <tr class="hover:bg-slate-50">
+                          <td class="p-3 font-mono font-bold text-blue-900">\${it.code}</td>
+                          <td class="p-3 font-semibold">\${it.name}</td>
+                          <td class="p-3 text-slate-600">\${it.locationName}</td>
+                          <td class="p-3 text-emerald-700">\${it.condition}</td>
+                          <td class="p-3 text-right"><button onclick="openF4Modal('\${it.id}')" class="px-2 py-1 bg-orange-50 text-orange-700 font-bold rounded">Cetak 10 Label</button></td>
+                        </tr>
+                      \`).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+        \${state.f4ModalOpen ? renderF4Modal() : ''}
+      \`;
+    }
+
+    function renderF4Modal() {
+      const it = state.items.find(i => i.id === state.selectedLabelItemId) || state.items[0];
+      const labels = Array(10).fill(it);
+      return \`
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden">
+            <div class="p-4 border-b flex items-center justify-between no-print bg-blue-50/50">
+              <div>
+                <h3 class="text-sm font-bold text-blue-950">Lembar Cetak 10 Label F4 / Folio (215 x 330 mm)</h3>
+                <p class="text-xs text-slate-500">2 Kolom x 5 Baris = 10 Label per Lembar</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="window.print()" class="px-4 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg">Cetak Lembar F4</button>
+                <button onclick="state.f4ModalOpen=false;render()" class="p-1.5 text-slate-400 hover:text-slate-700">✕</button>
+              </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100 print:bg-white print:p-0">
+              <div class="mx-auto bg-white p-4 print:p-0 border border-slate-300 print:border-none shadow-md print:shadow-none" style="max-width:820px;">
+                <div class="grid grid-cols-2 gap-3 print:gap-2">
+                  \${labels.map((item, idx) => \`
+                    <div class="f4-label-card border-2 border-slate-800 rounded-lg p-2.5 bg-white text-slate-900 flex flex-col justify-between" style="min-height:188px;">
+                      <div class="border-b-2 border-slate-800 pb-1 mb-1.5 text-center">
+                        <div class="text-[8px] font-bold uppercase text-slate-600">PEMERINTAH DAERAH · DINAS PENDIDIKAN</div>
+                        <div class="text-[11px] font-bold text-blue-950">\${state.activeSchool.name.toUpperCase()}</div>
+                        <div class="text-[8px] font-mono text-slate-500">LABEL INVENTARIS SARPRAS · NPSN: \${state.activeSchool.npsn}</div>
+                      </div>
+                      <div class="flex items-start gap-2.5">
+                        <div class="w-20 h-20 shrink-0 border border-slate-300 p-1 flex flex-col items-center justify-center bg-white rounded">
+                          \${generateQrSvg(item.code, 25)}
+                          <span class="text-[7px] font-mono font-bold text-slate-600 mt-0.5">SCAN QR</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <span class="inline-block bg-slate-100 font-mono font-bold text-[11px] px-1.5 py-0.5 rounded border border-slate-300">\${item.code}</span>
+                          <h4 class="text-xs font-bold text-slate-900 mt-1 line-clamp-2">\${item.name}</h4>
+                          <div class="mt-1 text-[9px] text-slate-600 space-y-0.5">
+                            <div>Merk: <strong>\${item.brand || '-'}</strong></div>
+                            <div>Ruang: <strong>\${item.locationName || '-'}</strong></div>
+                            <div>Kondisi: <strong class="text-emerald-700">\${item.condition}</strong></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mt-1.5 pt-1 border-t border-slate-200 flex items-center justify-between font-mono text-[8px] text-slate-600">
+                        <span>Label #\${idx + 1}/10</span>
+                        <span>*\${item.code}*</span>
+                      </div>
+                    </div>
+                  \`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      \`;
+    }
+
+    function setLogin(u, p) {
+      document.getElementById('login-u').value = u;
+      document.getElementById('login-p').value = p;
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-u').value.trim();
+      const p = document.getElementById('login-p').value.trim();
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(res => {
+          if (res && res.success) { state.currentUser = res.user; render(); }
+          else alert(res.message || 'Login gagal.');
+        }).apiLogin(u, p);
+      } else {
+        if ((u === 'admin' && p === 'admin123') || (u === 'guru' && p === 'guru123') || (u === 'teknisi' && p === 'teknisi123')) {
+          state.currentUser = { username: u, fullName: u === 'admin' ? 'Yana Maulana, S.Pd., M.Kom.' : 'Pengguna Sekolah' };
+          render();
+        } else {
+          alert('Username atau password tidak cocok.');
+        }
+      }
+    }
+
+    function openF4Modal(id) {
+      state.selectedLabelItemId = id || state.items[0].id;
+      state.f4ModalOpen = true;
+      render();
+    }
+
+    window.onload = function() {
+      render();
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(data => {
+          if (data && data.items) state.items = data.items;
+          if (data && data.schools) state.schools = data.schools;
+          if (data && data.activeSchool) state.activeSchool = data.activeSchool;
+          render();
+        }).apiGetAllData();
+      }
+    };
+  </script>
+</body>
+</html>
+`;

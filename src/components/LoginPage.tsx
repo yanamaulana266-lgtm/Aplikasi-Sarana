@@ -116,10 +116,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({ institution, onLoginSucces
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow-xl shadow-blue-900/5 rounded-2xl border border-blue-100 sm:px-10">
           <div className="mb-5 text-left border-b border-blue-50 pb-3">
-            <h2 className="text-base font-bold text-blue-950">Masuk ke Sistem</h2>
+            <h2 className="text-base font-bold text-blue-950">Masuk ke Website SIM-SARPRAS</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Silakan masukkan username dan password akun Anda
+              Silakan pilih peran atau masukkan username dan password untuk masuk
             </p>
+          </div>
+
+          {/* Pilihan Peran Cepat Masuk */}
+          <div className="mb-4">
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1.5">
+              Pilih Akses Pengguna:
+            </label>
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-blue-50/60 rounded-lg border border-blue-100">
+              {DEMO_ACCOUNTS.map(acc => {
+                const isSelected = username === acc.username;
+                return (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => {
+                      setUsername(acc.username);
+                      setPassword(acc.password);
+                      setErrorMessage('');
+                    }}
+                    className={`py-1.5 px-2 rounded-md text-[11px] font-semibold transition-all cursor-pointer truncate ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-blue-900 hover:bg-white/80'
+                    }`}
+                    title={`${acc.fullName} (${acc.description})`}
+                  >
+                    {acc.role === 'admin_sarpras' ? '👑 Admin' : acc.role === 'guru_peminjam' ? '👨‍🏫 Guru' : '🔧 Teknisi'}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {errorMessage && (
@@ -169,7 +200,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ institution, onLoginSucces
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -190,18 +221,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ institution, onLoginSucces
               <span className="text-[11px] text-slate-400">Tahun Ajaran {institution.academicYear}</span>
             </div>
 
-            {/* Vibrant Orange Action Button */}
+            {/* Vibrant Orange Action Button for Entering Website */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-orange-600/20 flex items-center justify-center gap-2 cursor-pointer mt-2"
+              className="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-500 active:bg-orange-700 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-orange-600/25 flex items-center justify-center gap-2 cursor-pointer mt-2"
             >
               <LogIn className="w-4 h-4" />
-              <span>{isLoading ? 'Memverifikasi...' : 'Masuk ke Aplikasi'}</span>
+              <span>{isLoading ? 'Sedang Memverifikasi...' : 'Masuk ke Website'}</span>
             </button>
           </form>
 
-          {/* Akun Demo sengaja disembunyikan sesuai permintaan pengguna */}
+          {/* Panduan Kredensial */}
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center text-[11px] text-slate-500 bg-slate-50/80 p-2 rounded-lg">
+            <span>💡 Akun siap pakai: Username: <strong className="text-blue-900 font-mono">admin</strong> · Password: <strong className="text-blue-900 font-mono">admin123</strong></span>
+          </div>
         </div>
 
         {/* Footer info */}

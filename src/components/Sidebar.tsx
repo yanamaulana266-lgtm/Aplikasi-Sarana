@@ -10,9 +10,11 @@ import {
   FileSpreadsheet, 
   QrCode, 
   Code2,
+  LogOut,
+  User,
   Info 
 } from 'lucide-react';
-import { SaranaItem, PrasaranaRoom, LoanRecord, MaintenanceTicket, InstitutionInfo } from '../types/sarpras';
+import { SaranaItem, PrasaranaRoom, LoanRecord, MaintenanceTicket, InstitutionInfo, AuthUser } from '../types/sarpras';
 
 interface SidebarProps {
   activeTab: string;
@@ -22,6 +24,8 @@ interface SidebarProps {
   loans: LoanRecord[];
   tickets: MaintenanceTicket[];
   schoolsCount: number;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
   onOpenReportModal: () => void;
   onOpenLabelModal: () => void;
   onOpenGasModal?: () => void;
@@ -35,6 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   loans,
   tickets,
   schoolsCount,
+  currentUser,
+  onLogout,
   onOpenReportModal,
   onOpenLabelModal,
   onOpenGasModal,
@@ -176,6 +182,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </p>
         </div>
       </div>
+
+      {/* User Session & Tombol Keluar dari Sistem */}
+      {onLogout && (
+        <div className="p-3 border-t border-slate-200 bg-slate-50/80 space-y-2">
+          {currentUser && (
+            <div className="flex items-center gap-2 px-1 py-0.5">
+              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center border border-orange-400 shrink-0 shadow-2xs">
+                {currentUser.avatarText || currentUser.username.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-slate-800 truncate leading-tight">
+                  {currentUser.fullName || currentUser.username}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono capitalize">
+                  {currentUser.role === 'admin_sarpras' ? 'Administrator' : currentUser.role}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 hover:border-rose-300 rounded-lg transition-all shadow-2xs cursor-pointer"
+            title="Keluar / Logout dari Sistem"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+            <span>Keluar dari Akun</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

@@ -85,7 +85,7 @@ export default function App() {
   // Auth & Session
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('sarpras_auth_user') || sessionStorage.getItem('sarpras_auth_user');
-    return saved ? JSON.parse(saved) : DEMO_ACCOUNTS[0];
+    return saved ? JSON.parse(saved) : null;
   });
 
   // UI Navigation & Role
@@ -414,6 +414,14 @@ export default function App() {
     }
   };
 
+  // Auth Logout Handler
+  const handleLogout = () => {
+    localStorage.removeItem('sarpras_auth_user');
+    sessionStorage.removeItem('sarpras_auth_user');
+    setCurrentUser(null);
+    showToast('Anda telah berhasil keluar dari sistem.');
+  };
+
   // Render Login Page if user is not authenticated
   if (!currentUser) {
     return (
@@ -437,12 +445,7 @@ export default function App() {
         onSelectSchool={handleSelectSchool}
         activeTab={activeTab}
         currentUser={currentUser}
-        onLogout={() => {
-          localStorage.removeItem('sarpras_auth_user');
-          sessionStorage.removeItem('sarpras_auth_user');
-          setCurrentUser(null);
-          showToast('Anda telah berhasil keluar dari sistem.');
-        }}
+        onLogout={handleLogout}
         onOpenReportModal={() => setIsReportModalOpen(true)}
         onOpenLabelModal={() => setBarcodeItem(items[0] || initialItems[0])}
         onOpenGasModal={() => setIsGasModalOpen(true)}
@@ -464,6 +467,8 @@ export default function App() {
           loans={loans}
           tickets={tickets}
           schoolsCount={schools.length}
+          currentUser={currentUser}
+          onLogout={handleLogout}
           onOpenReportModal={() => setIsReportModalOpen(true)}
           onOpenLabelModal={() => setBarcodeItem(items[0] || initialItems[0])}
           onOpenGasModal={() => setIsGasModalOpen(true)}

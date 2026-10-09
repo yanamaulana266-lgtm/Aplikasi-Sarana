@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SIM-SARPRAS - Sistem Informasi Sarana & Prasarana</title>
+  <title>SIM-SARPRAS - Sistem Informasi Sarana & Prasarana Sekolah</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
@@ -35,7 +35,7 @@
   <div id="app"></div>
 
   <script>
-    // QR Code Matrix Generator (Zero External Dependencies)
+    // QR Code Matrix Generator Vektor SVG (Zero External Dependencies)
     function pseudoHash(str, seed) {
       let h = seed;
       for (let i = 0; i < str.length; i++) {
@@ -99,10 +99,19 @@
       }).format(amount || 0);
     }
 
-    // State Aplikasi
+    // Basis Data Awal & State Aplikasi
     const state = {
       currentUser: null,
       activeTab: 'dashboard',
+      searchQuery: '',
+      filterCategory: 'all',
+      f4ModalOpen: false,
+      selectedLabelItemId: null,
+      addSchoolModalOpen: false,
+      addItemModalOpen: false,
+      addRoomModalOpen: false,
+      addLoanModalOpen: false,
+      addTicketModalOpen: false,
       activeSchool: {
         id: 'sch-1',
         name: 'SMP Negeri 1 Cerdas Mandiri',
@@ -110,8 +119,11 @@
         level: 'SMP',
         status: 'Negeri',
         address: 'Jl. Pendidikan Nusantara No. 45',
+        subdistrict: 'Kec. Sukamaju',
         city: 'Kota Pelajar',
         province: 'Jawa Barat',
+        telephone: '(022) 728-1945',
+        email: 'sarpras@smpn1cerdasmandiri.sch.id',
         principal: 'Dr. H. Bambang Hartono, M.Pd.',
         principalNip: '19740512 199802 1 004',
         sarprasHead: 'Yana Maulana, S.Pd., M.Kom.',
@@ -126,10 +138,15 @@
           level: 'SMP',
           status: 'Negeri',
           address: 'Jl. Pendidikan Nusantara No. 45',
+          subdistrict: 'Kec. Sukamaju',
           city: 'Kota Pelajar',
           province: 'Jawa Barat',
+          telephone: '(022) 728-1945',
+          email: 'sarpras@smpn1cerdasmandiri.sch.id',
           principal: 'Dr. H. Bambang Hartono, M.Pd.',
+          principalNip: '19740512 199802 1 004',
           sarprasHead: 'Yana Maulana, S.Pd., M.Kom.',
+          sarprasNip: '19850918 201001 1 012',
           academicYear: '2025/2026 Ganjil'
         },
         {
@@ -139,69 +156,230 @@
           level: 'SMP',
           status: 'Negeri',
           address: 'Jl. Pemuda Merdeka No. 12',
+          subdistrict: 'Kec. Cidadap',
           city: 'Kota Pelajar',
           province: 'Jawa Barat',
+          telephone: '(022) 882-9911',
+          email: 'sarpras@smpn2bintang.sch.id',
           principal: 'Dra. Hj. Nurjanah, M.M.',
+          principalNip: '19700820 199503 2 003',
           sarprasHead: 'Asep Saepudin, S.Pd.',
+          sarprasNip: '19890214 201402 1 005',
           academicYear: '2025/2026 Ganjil'
         }
       ],
       items: [
-        { id: 'it-1', code: 'SPR-2024-ELK-001', name: 'Proyektor LCD Epson EB-E500', category: 'Elektronik & Multimedia', brand: 'Epson', specification: '3.300 Lumens XGA HDMI', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium Komputer 1', acquisitionYear: 2024, sourceOfFund: 'BOS Reguler', price: 6850000, quantity: 1, unit: 'Unit' },
-        { id: 'it-2', code: 'SPR-2023-ELK-003', name: 'Laptop Chromebook Asus C214', category: 'Elektronik & Multimedia', brand: 'Asus', specification: 'Intel Celeron N4020 RAM 4GB', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium Komputer 1', acquisitionYear: 2023, sourceOfFund: 'DAK Fisik', price: 6500000, quantity: 30, unit: 'Unit' },
-        { id: 'it-3', code: 'SPR-2024-LAB-001', name: 'Mikroskop Binokuler Olympus CX23', category: 'Alat Laboratorium', brand: 'Olympus', specification: 'Plan 4x 10x 40x 100x Oil', condition: 'Baik', status: 'Tersedia', locationName: 'Laboratorium IPA Terpadu', acquisitionYear: 2024, sourceOfFund: 'DAK Fisik', price: 18500000, quantity: 6, unit: 'Unit' },
-        { id: 'it-4', code: 'SPR-2022-ELK-005', name: 'Portable Sound System Baretone MAX15HB', category: 'Elektronik & Multimedia', brand: 'Baretone', specification: '15 Inch Woofer 600W RMS', condition: 'Baik', status: 'Tersedia', locationName: 'Gudang Pusat Sarpras', acquisitionYear: 2022, sourceOfFund: 'BOS Reguler', price: 4300000, quantity: 2, unit: 'Unit' }
+        {
+          id: 'it-1',
+          code: 'SPR-2024-ELK-001',
+          name: 'Proyektor LCD Epson EB-E500',
+          category: 'Elektronik & Multimedia',
+          brand: 'Epson',
+          specification: '3.300 ANSI Lumens, HDMI, XGA, Resolusi 1024x768',
+          condition: 'Baik',
+          status: 'Sedang Dipinjam',
+          locationId: 'room-1',
+          locationName: 'Laboratorium Komputer 1',
+          acquisitionYear: 2024,
+          sourceOfFund: 'BOS Reguler',
+          price: 6850000,
+          quantity: 1,
+          unit: 'Unit',
+          serialNumber: 'EPS-2024-X99',
+          notes: 'Lengkap tas bawaan dan remote'
+        },
+        {
+          id: 'it-2',
+          code: 'SPR-2023-ELK-003',
+          name: 'Laptop Chromebook Asus C214',
+          category: 'Elektronik & Multimedia',
+          brand: 'Asus',
+          specification: 'Intel Celeron N4020, RAM 4GB, Layar Sentuh 11.6 Inch',
+          condition: 'Baik',
+          status: 'Tersedia',
+          locationId: 'room-1',
+          locationName: 'Laboratorium Komputer 1',
+          acquisitionYear: 2023,
+          sourceOfFund: 'DAK Fisik',
+          price: 6500000,
+          quantity: 30,
+          unit: 'Unit',
+          serialNumber: 'CB-BATCH3-01',
+          notes: 'Dilengkapi troli pengisian daya mobile'
+        },
+        {
+          id: 'it-3',
+          code: 'SPR-2024-LAB-001',
+          name: 'Mikroskop Binokuler Olympus CX23',
+          category: 'Alat Laboratorium',
+          brand: 'Olympus',
+          specification: 'Objektif Plan 4x, 10x, 40x, 100x Oil, Lampu LED',
+          condition: 'Baik',
+          status: 'Tersedia',
+          locationId: 'room-2',
+          locationName: 'Laboratorium IPA Terpadu',
+          acquisitionYear: 2024,
+          sourceOfFund: 'DAK Fisik',
+          price: 18500000,
+          quantity: 6,
+          unit: 'Unit',
+          serialNumber: 'OLY-CX23-01',
+          notes: 'Disimpan di lemari kering berpenghangat'
+        },
+        {
+          id: 'it-4',
+          code: 'SPR-2022-ELK-005',
+          name: 'Portable Sound System Baretone MAX15HB',
+          category: 'Elektronik & Multimedia',
+          brand: 'Baretone',
+          specification: '15 Inch Woofer 600W RMS, 2 Mic Wireless, Bluetooth',
+          condition: 'Baik',
+          status: 'Tersedia',
+          locationId: 'room-3',
+          locationName: 'Gudang Sarpras Pusat',
+          acquisitionYear: 2022,
+          sourceOfFund: 'BOS Reguler',
+          price: 4300000,
+          quantity: 2,
+          unit: 'Unit',
+          serialNumber: 'BRT-881-A',
+          notes: 'Digunakan untuk upacara bendera dan seminar'
+        },
+        {
+          id: 'it-5',
+          code: 'SPR-2024-MBL-012',
+          name: 'Meja & Kursi Siswa Ergonomis Set',
+          category: 'Meubelair / Perabot',
+          brand: 'Informa School',
+          specification: 'Rangka Besi Hollow Powder Coating, Top Plywood Melamin',
+          condition: 'Baik',
+          status: 'Tersedia',
+          locationId: 'room-4',
+          locationName: 'Ruang Kelas VII-A',
+          acquisitionYear: 2024,
+          sourceOfFund: 'BOS Afirmasi',
+          price: 650000,
+          quantity: 32,
+          unit: 'Set',
+          serialNumber: 'INF-ERG-7A',
+          notes: 'Pengadaan kelas peremajaan'
+        }
       ],
       rooms: [
-        { id: 'room-1', code: 'R-LAB-KOMP-1', name: 'Laboratorium Komputer 1', building: 'Gedung Multimedia Lt. 2', type: 'Laboratorium', capacity: 36, area: 72, condition: 'Baik', picName: 'Rian Kurniawan, S.Kom.' },
-        { id: 'room-2', code: 'R-LAB-IPA', name: 'Laboratorium IPA Terpadu', building: 'Gedung Sains Lt. 1', type: 'Laboratorium', capacity: 32, area: 84, condition: 'Baik', picName: 'Sri Wahyuni, M.Pd.' },
-        { id: 'room-3', code: 'R-GUDANG', name: 'Gudang Pusat Sarpras', building: 'Gedung Penunjang', type: 'Gudang Sarpras', capacity: 10, area: 48, condition: 'Baik', picName: 'Agus Triono' }
+        {
+          id: 'room-1',
+          code: 'R-LAB-KOMP-1',
+          name: 'Laboratorium Komputer 1',
+          building: 'Gedung Multimedia - Lt 2',
+          type: 'Laboratorium',
+          capacity: 36,
+          area: 72,
+          condition: 'Baik',
+          picName: 'Rian Kurniawan, S.Kom.',
+          picContact: '0812-3456-7890',
+          status: 'Tersedia',
+          facilities: ['AC 2 Unit', 'Smart TV 65 Inch', 'LAN Gigabit', '32 PC Client']
+        },
+        {
+          id: 'room-2',
+          code: 'R-LAB-IPA',
+          name: 'Laboratorium IPA Terpadu',
+          building: 'Gedung Sains - Lt 1',
+          type: 'Laboratorium',
+          capacity: 32,
+          area: 84,
+          condition: 'Baik',
+          picName: 'Sri Wahyuni, M.Pd.',
+          picContact: '0813-9876-5432',
+          status: 'Tersedia',
+          facilities: ['Wastafel 6 Titik', 'Meja Granit', 'APAR', 'Lemari Asam']
+        },
+        {
+          id: 'room-3',
+          code: 'R-GUDANG-PST',
+          name: 'Gudang Sarpras Pusat',
+          building: 'Gedung Penunjang - Lt 1',
+          type: 'Gudang',
+          capacity: 10,
+          area: 48,
+          condition: 'Baik',
+          picName: 'Agus Triono',
+          picContact: '0819-3322-1100',
+          status: 'Tersedia',
+          facilities: ['Rak Besi Heavy Duty', 'Palet Plastik', 'Toolkit Teknisi']
+        },
+        {
+          id: 'room-4',
+          code: 'R-KLS-7A',
+          name: 'Ruang Kelas VII-A',
+          building: 'Gedung Belajar Utama - Lt 1',
+          type: 'Ruang Kelas',
+          capacity: 32,
+          area: 64,
+          condition: 'Baik',
+          picName: 'Dra. Endang Sulistyowati',
+          picContact: '0815-4433-2211',
+          status: 'Tersedia',
+          facilities: ['Whiteboard Magnetik', 'Kipas Angin 2 Unit', 'Speaker Dinding']
+        }
       ],
       loans: [
-        { id: 'ln-1', loanNumber: 'PJM-2026-04-001', borrowerName: 'Siti Rohmah, S.Pd.', borrowerRole: 'Guru', itemName: 'Proyektor LCD Epson EB-E500', itemCode: 'SPR-2024-ELK-001', quantity: 1, borrowDate: '2026-04-07', expectedReturnDate: '2026-04-09', purpose: 'Media Presentasi Kelas IX-C', status: 'Sedang Dipinjam' }
+        {
+          id: 'loan-1',
+          loanNumber: 'PJM-2026-04-001',
+          borrowerName: 'Siti Rohmah, S.Pd.',
+          borrowerRole: 'Guru',
+          borrowerContact: '0812-8877-6655',
+          itemId: 'it-1',
+          itemName: 'Proyektor LCD Epson EB-E500',
+          itemCode: 'SPR-2024-ELK-001',
+          quantity: 1,
+          borrowDate: '2026-04-07',
+          expectedReturnDate: '2026-04-09',
+          actualReturnDate: '',
+          purpose: 'Pembelajaran Media Interaktif Bahasa Indonesia Kelas IX-C',
+          status: 'Sedang Dipinjam',
+          returnCondition: '',
+          returnNotes: ''
+        }
       ],
       tickets: [
-        { id: 'tk-1', ticketNumber: 'TIK-MNT-2026-008', reporterName: 'Rian Kurniawan, S.Kom.', targetName: 'AC Daikin 1.5 PK Lab Komputer', location: 'Lab Komputer 1', severity: 'Tinggi / Kritis', damageDescription: 'Blower hangat kode error U4', actionStatus: 'Sedang Dikerjakan', estimatedCost: 1450000 }
-      ],
-      f4ModalOpen: false,
-      selectedLabelItem: null,
-      addSchoolModalOpen: false
+        {
+          id: 'tik-1',
+          ticketNumber: 'TIK-MNT-2026-008',
+          reporterName: 'Rian Kurniawan, S.Kom.',
+          reporterRole: 'Laboran',
+          reportedDate: '2026-03-29',
+          targetType: 'Sarana',
+          targetId: 'it-1',
+          targetName: 'AC Daikin 1.5 PK Lab Komputer',
+          location: 'Lab Komputer 1',
+          severity: 'Tinggi / Kritis',
+          damageDescription: 'Unit indoor hembusan hangat dan error U4 outdoor',
+          actionStatus: 'Sedang Dikerjakan',
+          technicianName: 'CV. Sejuk Mandiri Teknik',
+          estimatedCost: 1450000,
+          actualCost: 0,
+          actionNotes: 'Penggantian kapasitor dan pengisian freon R32'
+        }
+      ]
     };
 
-    // Sinkronisasi dengan Google Apps Script jika tersedia
-    function syncWithGoogleAppsScript() {
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            if (data) {
-              if (data.schools && data.schools.length) state.schools = data.schools;
-              if (data.activeSchool) state.activeSchool = data.activeSchool;
-              if (data.items && data.items.length) state.items = data.items;
-              if (data.rooms && data.rooms.length) state.rooms = data.rooms;
-              if (data.loans && data.loans.length) state.loans = data.loans;
-              if (data.tickets && data.tickets.length) state.tickets = data.tickets;
-              render();
-            }
-          })
-          .apiGetAllData();
-      }
-    }
-
-    // Render Function Utama
+    // Fungsi Render Utama
     function render() {
       const app = document.getElementById('app');
 
-      // Jika Belum Login -> Tampilkan Halaman Login (Biru & Oranye, Akun Demo Sembunyi)
+      // Tampilan Gerbang Masuk jika Belum Login
       if (!state.currentUser) {
         app.innerHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-orange-50/40 flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+          <div class="min-h-screen bg-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
             <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-              <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white shadow-lg mb-3 border-2 border-orange-400">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-700 text-white shadow-lg border-2 border-orange-500 mb-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
               </div>
               <h1 class="text-2xl font-bold tracking-tight text-blue-950">SIM-SARPRAS</h1>
               <p class="text-xs font-semibold uppercase tracking-wider text-orange-600 mt-1">Sistem Informasi Sarana & Prasarana</p>
-              <div class="mt-2 text-xs text-blue-800 bg-blue-100/80 py-1 px-3 rounded-full inline-block border border-blue-200">
+              <div class="mt-2 text-xs text-blue-800 bg-blue-100/90 py-1 px-3.5 rounded-full inline-block border border-blue-200">
                 ${state.activeSchool.name} · NPSN: ${state.activeSchool.npsn}
               </div>
             </div>
@@ -209,8 +387,18 @@
             <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
               <div class="bg-white py-8 px-6 shadow-xl rounded-2xl border border-blue-100 sm:px-10">
                 <div class="mb-5 border-b border-blue-50 pb-3">
-                  <h2 class="text-base font-bold text-blue-950">Masuk ke Sistem</h2>
-                  <p class="text-xs text-slate-500 mt-0.5">Silakan masukkan username dan password Anda</p>
+                  <h2 class="text-base font-bold text-blue-950">Masuk ke Website SIM-SARPRAS</h2>
+                  <p class="text-xs text-slate-500 mt-0.5">Pilih peran akses cepat atau ketik username dan password</p>
+                </div>
+
+                <!-- Akses Peran Cepat -->
+                <div class="mb-4">
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1.5">Pilih Akses Pengguna:</label>
+                  <div class="grid grid-cols-3 gap-1.5 p-1 bg-blue-50/70 rounded-lg border border-blue-100">
+                    <button type="button" onclick="setLoginQuick('admin','admin123')" class="py-1.5 px-2 rounded text-[11px] font-semibold bg-blue-600 text-white shadow-2xs hover:bg-blue-700 cursor-pointer">👑 Admin</button>
+                    <button type="button" onclick="setLoginQuick('guru','guru123')" class="py-1.5 px-2 rounded text-[11px] font-semibold text-slate-700 hover:bg-white cursor-pointer">👨‍🏫 Guru</button>
+                    <button type="button" onclick="setLoginQuick('teknisi','teknisi123')" class="py-1.5 px-2 rounded text-[11px] font-semibold text-slate-700 hover:bg-white cursor-pointer">🔧 Teknisi</button>
+                  </div>
                 </div>
 
                 <div id="login-error" class="hidden mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700"></div>
@@ -218,11 +406,11 @@
                 <form id="login-form" class="space-y-4" onsubmit="handleLoginSubmit(event)">
                   <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
-                    <input type="text" id="login-username" required value="admin" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Username">
+                    <input type="text" id="login-username" required value="admin" class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Username">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
-                    <input type="password" id="login-password" required value="admin123" class="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Password">
+                    <input type="password" id="login-password" required value="admin123" class="w-full px-3.5 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50/50" placeholder="Password">
                   </div>
                   <div class="flex items-center justify-between text-xs pt-1">
                     <label class="flex items-center gap-2 cursor-pointer text-slate-600">
@@ -232,9 +420,13 @@
                     <span class="text-[11px] text-slate-400">T.A. ${state.activeSchool.academicYear}</span>
                   </div>
                   <button type="submit" class="w-full py-2.5 px-4 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-orange-600/20 cursor-pointer">
-                    Masuk ke Aplikasi
+                    Masuk ke Website
                   </button>
                 </form>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 text-center text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg">
+                  💡 Kredensial default: <strong class="text-blue-900 font-mono">admin</strong> / <strong class="text-blue-900 font-mono">admin123</strong>
+                </div>
               </div>
             </div>
           </div>
@@ -242,20 +434,23 @@
         return;
       }
 
-      // Jika Sudah Login -> Render Aplikasi Lengkap
+      // Tampilan Aplikasi Lengkap jika Sudah Login
       let mainContent = '';
+
       if (state.activeTab === 'dashboard') {
-        const totalNilai = state.items.reduce((acc, it) => acc + (it.price * it.quantity), 0);
+        const totalNilai = state.items.reduce((acc, it) => acc + ((Number(it.price) || 0) * (Number(it.quantity) || 1)), 0);
         mainContent = `
-          <div class="space-y-5">
-            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-6">
+            <!-- Header Banner -->
+            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <span class="text-xs font-bold uppercase tracking-wider text-orange-600">SIM Sarana & Prasarana</span>
                 <h1 class="text-xl font-bold text-blue-950 mt-1">${state.activeSchool.name}</h1>
-                <p class="text-xs text-slate-500 mt-1 max-w-xl">Aset fisik, peminjaman peralatan, pemeliharaan gedung & cetak label F4</p>
+                <p class="text-xs text-slate-500 mt-1">Aset fisik, peminjaman peralatan, pemeliharaan & cetak label F4 berstandar dinas</p>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
-                <button onclick="openF4Modal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                <button onclick="openF4Modal()" class="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H7a2 2 0 00-2 2v4h10z"></path></svg>
                   Cetak 10 Label F4
                 </button>
                 <button onclick="state.activeTab='schools'; render();" class="px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 cursor-pointer">
@@ -264,89 +459,149 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- 4 Kartu Statistik -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
               <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
                 <span class="text-xs text-slate-500">Nilai Aset Sarpras</span>
                 <div class="text-lg font-bold font-mono text-blue-950 mt-1">${formatRupiah(totalNilai)}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Berdasarkan data master</div>
               </div>
               <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
                 <span class="text-xs text-slate-500">Barang Sarana</span>
                 <div class="text-lg font-bold font-mono text-slate-900 mt-1">${state.items.length} Barang</div>
+                <div class="text-[10px] text-emerald-600 mt-0.5">${state.items.filter(i => i.condition === 'Baik').length} Kondisi Baik</div>
               </div>
               <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
                 <span class="text-xs text-slate-500">Prasarana Ruang</span>
-                <div class="text-lg font-bold font-mono text-slate-900 mt-1">${state.rooms.length} Ruang</div>
+                <div class="text-lg font-bold font-mono text-slate-900 mt-1">${state.rooms.length} Ruangan</div>
+                <div class="text-[10px] text-blue-600 mt-0.5">Gedung & Laboratorium</div>
               </div>
               <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs">
-                <span class="text-xs text-slate-500">Peminjaman Aktif</span>
-                <div class="text-lg font-bold font-mono text-orange-600 mt-1">${state.loans.length} Transaksi</div>
+                <span class="text-xs text-slate-500">Peminjaman Berjalan</span>
+                <div class="text-lg font-bold font-mono text-orange-600 mt-1">${state.loans.filter(l => l.status === 'Sedang Dipinjam').length} Transaksi</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Sirkulasi aktif</div>
               </div>
-            </div>
-          </div>
-        `;
-      } else if (state.activeTab === 'schools') {
-        mainContent = `
-          <div class="space-y-4">
-            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <h2 class="text-lg font-bold text-blue-950">Manajemen Sekolah & Institusi</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Kelola dan ganti sekolah aktif untuk penyesuaian kop cetak dan administrasi</p>
-              </div>
-              <button onclick="openAddSchoolModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
-                + Tambah Sekolah Baru
-              </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              ${state.schools.map(s => `
-                <div class="bg-white p-4 rounded-xl border ${s.id === state.activeSchool.id ? 'border-2 border-blue-600' : 'border-slate-200'} shadow-2xs space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 bg-blue-100 text-blue-800 rounded">NPSN: ${s.npsn}</span>
-                    ${s.id === state.activeSchool.id ? '<span class="text-[11px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">Sedang Aktif</span>' : `<button onclick="switchSchool('${s.id}')" class="text-xs font-bold text-blue-600 hover:underline">Gunakan Sekolah Ini</button>`}
-                  </div>
-                  <h3 class="text-sm font-bold text-slate-900">${s.name}</h3>
-                  <div class="text-xs text-slate-500">${s.city}, ${s.province}</div>
-                  <div class="text-[11px] text-slate-600 pt-2 border-t border-slate-100">Kepala: <strong>${s.principal}</strong> · Koord. Sarpras: <strong>${s.sarprasHead}</strong></div>
+            <!-- Tabel Barang Terbaru & Shortcut Aksi -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+              <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-blue-950">Daftar Sarana Terbaru</h3>
+                  <p class="text-xs text-slate-500">Barang inventaris yang siap dicetak labelnya</p>
                 </div>
-              `).join('')}
+                <button onclick="state.activeTab='items'; render();" class="text-xs font-bold text-blue-600 hover:underline">
+                  Lihat Semua Sarana →
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-blue-50/50 border-b border-slate-200 font-semibold text-slate-700">
+                    <tr>
+                      <th class="p-3">Kode Barang</th>
+                      <th class="p-3">Nama Barang</th>
+                      <th class="p-3">Ruangan</th>
+                      <th class="p-3">Kondisi</th>
+                      <th class="p-3 text-right">Nilai Satuan</th>
+                      <th class="p-3 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    ${state.items.slice(0, 5).map(it => `
+                      <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-mono font-bold text-blue-900">${it.code}</td>
+                        <td class="p-3 font-semibold text-slate-900">${it.name}</td>
+                        <td class="p-3 text-slate-600">${it.locationName || '-'}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">${it.condition}</span></td>
+                        <td class="p-3 text-right font-mono">${formatRupiah(it.price)}</td>
+                        <td class="p-3 text-right">
+                          <button onclick="openF4Modal('${it.id}')" class="px-2.5 py-1 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded text-[11px] font-bold border border-orange-200 cursor-pointer">
+                            Cetak 10 Label F4
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         `;
       } else if (state.activeTab === 'items') {
+        const filtered = state.items.filter(it => {
+          const matchQuery = !state.searchQuery || 
+            it.name.toLowerCase().includes(state.searchQuery.toLowerCase()) || 
+            it.code.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+            it.brand.toLowerCase().includes(state.searchQuery.toLowerCase());
+          const matchCat = state.filterCategory === 'all' || it.category === state.filterCategory;
+          return matchQuery && matchCat;
+        });
+
         mainContent = `
           <div class="space-y-4">
-            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 class="text-base font-bold text-blue-950">Inventaris Sarana (Aset Barang)</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Daftar master peralatan sekolah dengan barcode & QR code</p>
+                <p class="text-xs text-slate-500 mt-0.5">Kelola barang, cetak label F4 dengan QR code 2D, dan pantau status aset</p>
               </div>
-              <button onclick="openF4Modal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
-                Cetak 10 Label F4
-              </button>
+              <div class="flex items-center gap-2">
+                <button onclick="openAddItemModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-2xs cursor-pointer">
+                  + Tambah Barang Baru
+                </button>
+                <button onclick="openF4Modal()" class="px-3.5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-2xs cursor-pointer">
+                  Cetak 10 Label F4
+                </button>
+              </div>
             </div>
 
+            <!-- Filter & Pencarian Realtime -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center gap-2">
+              <input type="text" placeholder="Cari kode atau nama barang..." value="${state.searchQuery}" oninput="state.searchQuery=this.value; render();" class="flex-1 px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select onchange="state.filterCategory=this.value; render();" class="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="all">Semua Kategori</option>
+                <option value="Elektronik & Multimedia" ${state.filterCategory === 'Elektronik & Multimedia' ? 'selected' : ''}>Elektronik & Multimedia</option>
+                <option value="Alat Laboratorium" ${state.filterCategory === 'Alat Laboratorium' ? 'selected' : ''}>Alat Laboratorium</option>
+                <option value="Meubelair / Perabot" ${state.filterCategory === 'Meubelair / Perabot' ? 'selected' : ''}>Meubelair / Perabot</option>
+              </select>
+            </div>
+
+            <!-- Tabel Data Sarana -->
             <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
               <table class="w-full text-left text-xs">
                 <thead class="bg-blue-50/50 border-b border-slate-200 font-semibold text-slate-700">
                   <tr>
-                    <th class="p-3">Kode</th>
-                    <th class="p-3">Nama Barang</th>
+                    <th class="p-3">Kode Barang</th>
+                    <th class="p-3">Nama & Spesifikasi</th>
                     <th class="p-3">Kategori</th>
+                    <th class="p-3">Lokasi / Ruang</th>
                     <th class="p-3">Kondisi</th>
-                    <th class="p-3 text-right">Harga</th>
+                    <th class="p-3 text-right">Harga Satuan</th>
                     <th class="p-3 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                  ${state.items.map(it => `
+                  ${filtered.length === 0 ? `
+                    <tr><td colspan="7" class="p-8 text-center text-slate-400">Tidak ada barang yang cocok dengan pencarian.</td></tr>
+                  ` : filtered.map(it => `
                     <tr class="hover:bg-slate-50">
                       <td class="p-3 font-mono font-bold text-blue-900">${it.code}</td>
-                      <td class="p-3 font-semibold text-slate-900">${it.name}</td>
+                      <td class="p-3">
+                        <div class="font-bold text-slate-900">${it.name}</div>
+                        <div class="text-[11px] text-slate-500">${it.brand || '-'} · ${it.specification || '-'}</div>
+                      </td>
                       <td class="p-3 text-slate-600">${it.category}</td>
-                      <td class="p-3"><span class="text-emerald-700 font-medium">${it.condition}</span></td>
-                      <td class="p-3 text-right font-mono">${formatRupiah(it.price)}</td>
-                      <td class="p-3 text-right">
-                        <button onclick="openF4Modal('${it.id}')" class="px-2 py-1 bg-orange-50 text-orange-700 rounded text-[11px] font-bold hover:bg-orange-100">Cetak Label</button>
+                      <td class="p-3 text-slate-600">${it.locationName || '-'}</td>
+                      <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${it.condition === 'Baik' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${it.condition}</span>
+                      </td>
+                      <td class="p-3 text-right font-mono font-semibold">${formatRupiah(it.price)}</td>
+                      <td class="p-3 text-right space-x-1">
+                        <button onclick="openF4Modal('${it.id}')" class="px-2.5 py-1 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded text-[11px] font-bold border border-orange-200 cursor-pointer">
+                          Cetak Label
+                        </button>
+                        <button onclick="deleteItem('${it.id}')" class="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded text-[11px] font-semibold">
+                          Hapus
+                        </button>
                       </td>
                     </tr>
                   `).join('')}
@@ -355,87 +610,309 @@
             </div>
           </div>
         `;
+      } else if (state.activeTab === 'rooms') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-xs flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-blue-950">Prasarana (Gedung & Ruangan)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Daftar ruangan kelas, laboratorium, perpustakaan, dan gudang sarpras</p>
+              </div>
+              <button onclick="openAddRoomModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-2xs cursor-pointer">
+                + Tambah Ruangan Baru
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${state.rooms.map(r => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded">${r.code}</span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded ${r.condition === 'Baik' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">${r.condition}</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-900">${r.name}</h3>
+                  <div class="text-xs text-slate-500">${r.building} · Kapasitas: <strong>${r.capacity} Orang</strong> · Luas: <strong>${r.area} m²</strong></div>
+                  <div class="text-[11px] text-slate-600 pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span>PIC: <strong>${r.picName}</strong> (${r.picContact})</span>
+                    <span class="font-bold text-blue-600">${r.status}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (state.activeTab === 'loans') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-xs flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-blue-950">Sirkulasi & Peminjaman Sarpras</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Pencatatan peminjaman alat multimedia, proyektor, laptop, dan perlengkapan kegiatan</p>
+              </div>
+              <button onclick="openAddLoanModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-2xs cursor-pointer">
+                + Pinjam Sarana Baru
+              </button>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-blue-50/50 border-b border-slate-200 font-semibold text-slate-700">
+                  <tr>
+                    <th class="p-3">No. Pinjam</th>
+                    <th class="p-3">Peminjam</th>
+                    <th class="p-3">Barang</th>
+                    <th class="p-3">Tgl Pinjam</th>
+                    <th class="p-3">Batas Kembali</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${state.loans.map(l => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-3 font-mono font-bold text-blue-900">${l.loanNumber}</td>
+                      <td class="p-3 font-semibold text-slate-900">${l.borrowerName} <span class="text-slate-400 font-normal">(${l.borrowerRole})</span></td>
+                      <td class="p-3 text-slate-800 font-medium">${l.itemName}</td>
+                      <td class="p-3 text-slate-600 font-mono">${l.borrowDate}</td>
+                      <td class="p-3 text-slate-600 font-mono">${l.expectedReturnDate}</td>
+                      <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${l.status === 'Sedang Dipinjam' ? 'bg-orange-50 text-orange-700 border border-orange-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">${l.status}</span>
+                      </td>
+                      <td class="p-3 text-right">
+                        ${l.status === 'Sedang Dipinjam' ? `
+                          <button onclick="returnLoan('${l.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-bold cursor-pointer">
+                            Kembalikan
+                          </button>
+                        ` : `<span class="text-[11px] text-slate-400">Selesai</span>`}
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      } else if (state.activeTab === 'tickets') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-xs flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-blue-950">Tiket Pemeliharaan & Perbaikan Sarpras</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Laporan kerusakan, perbaikan teknis, dan monitoring biaya servis</p>
+              </div>
+              <button onclick="openAddTicketModal()" class="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg shadow-2xs cursor-pointer">
+                + Buat Tiket Servis
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${state.tickets.map(t => `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded">${t.ticketNumber}</span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">${t.actionStatus}</span>
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-900">${t.targetName}</h3>
+                  <div class="text-xs text-rose-600 font-medium">Urgensi: ${t.severity} · Lokasi: ${t.location}</div>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg">${t.damageDescription}</p>
+                  <div class="text-[11px] text-slate-500 pt-2 border-t border-slate-100 flex items-center justify-between">
+                    <span>Teknisi: <strong>${t.technicianName || '-'}</strong></span>
+                    <span class="font-mono font-bold text-slate-700">Est. ${formatRupiah(t.estimatedCost)}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (state.activeTab === 'schools') {
+        mainContent = `
+          <div class="space-y-4">
+            <div class="bg-white border border-blue-100 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 class="text-lg font-bold text-blue-950">Manajemen Sekolah & Institusi</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Kelola data sekolah dan ganti sekolah aktif untuk penyesuaian kop label cetak dan administrasi</p>
+              </div>
+              <button onclick="openAddSchoolModal()" class="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                + Tambah Sekolah Baru
+              </button>
+            </div>
+
+            <!-- Kartu Sekolah Aktif -->
+            <div class="bg-blue-50 border-2 border-blue-600 rounded-xl p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Sekolah Sedang Digunakan (Aktif)</span>
+                <span class="text-xs font-bold px-2.5 py-1 bg-blue-600 text-white rounded-md">Aktif</span>
+              </div>
+              <h3 class="text-xl font-bold text-blue-950">${state.activeSchool.name}</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-slate-700">
+                <div>NPSN: <strong class="font-mono">${state.activeSchool.npsn}</strong></div>
+                <div>Jenjang/Status: <strong>${state.activeSchool.level} (${state.activeSchool.status})</strong></div>
+                <div>Kepala Sekolah: <strong>${state.activeSchool.principal}</strong></div>
+                <div>Koordinator Sarpras: <strong>${state.activeSchool.sarprasHead}</strong></div>
+              </div>
+              <div class="text-xs text-slate-600 pt-2 border-t border-blue-200">
+                Alamat: ${state.activeSchool.address}, ${state.activeSchool.city}, ${state.activeSchool.province}
+              </div>
+            </div>
+
+            <!-- Daftar Seluruh Sekolah -->
+            <h3 class="text-sm font-bold text-slate-800 pt-2">Daftar Seluruh Sekolah Terdaftar (${state.schools.length})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${state.schools.map(s => `
+                <div class="bg-white p-4 rounded-xl border ${s.id === state.activeSchool.id ? 'border-2 border-blue-600' : 'border-slate-200'} shadow-2xs space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 bg-blue-100 text-blue-800 rounded">NPSN: ${s.npsn}</span>
+                    ${s.id === state.activeSchool.id ? `
+                      <span class="text-[11px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded">Sedang Aktif</span>
+                    ` : `
+                      <button onclick="switchSchool('${s.id}')" class="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded text-xs font-bold cursor-pointer transition-colors">
+                        Gunakan Sekolah Ini
+                      </button>
+                    `}
+                  </div>
+                  <h3 class="text-sm font-bold text-slate-900">${s.name}</h3>
+                  <div class="text-xs text-slate-500">${s.city}, ${s.province} · ${s.level} ${s.status}</div>
+                  <div class="text-[11px] text-slate-600 pt-2 border-t border-slate-100">
+                    Kepala: <strong>${s.principal}</strong> · Koord. Sarpras: <strong>${s.sarprasHead}</strong>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
       }
 
+      // Render Layout Utama (Navbar, Sidebar, Konten)
       app.innerHTML = `
         <div class="min-h-screen flex flex-col">
           <!-- Top Navbar -->
-          <header class="bg-white border-b border-blue-100 h-14 px-4 sm:px-6 flex items-center justify-between shadow-2xs no-print">
+          <header class="bg-white border-b border-blue-100 h-14 px-4 sm:px-6 flex items-center justify-between shadow-2xs no-print sticky top-0 z-30">
             <div class="flex items-center gap-3">
-              <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs border border-orange-400">SP</span>
+              <span class="w-8 h-8 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-xs border border-orange-400">SP</span>
               <span class="text-base font-bold text-blue-950">SIM-SARPRAS</span>
               <span class="text-slate-300">/</span>
-              <span class="text-xs font-semibold text-slate-700 truncate max-w-[200px]">${state.activeSchool.name}</span>
+              <select onchange="switchSchool(this.value)" class="text-xs font-semibold text-slate-700 border border-slate-200 rounded-md py-1 px-2 bg-slate-50 focus:outline-none">
+                ${state.schools.map(s => `<option value="${s.id}" ${s.id === state.activeSchool.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
             </div>
 
             <div class="flex items-center gap-2">
-              <button onclick="openF4Modal()" class="px-3 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-2xs cursor-pointer">
+              <button onclick="openF4Modal()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-2xs cursor-pointer flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H7a2 2 0 00-2 2v4h10z"></path></svg>
                 Cetak 10 Label F4
               </button>
-              <button onclick="logout()" class="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-rose-600 rounded-lg">
-                Keluar
+              <div class="h-6 w-px bg-slate-200 mx-1"></div>
+              <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-1 rounded border border-blue-100 hidden sm:inline-block">
+                ${state.currentUser.fullName || state.currentUser.username}
+              </span>
+              <button onclick="logout()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg cursor-pointer shadow-2xs whitespace-nowrap" title="Keluar dari Sistem">
+                <svg class="w-3.5 h-3.5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>Keluar</span>
               </button>
             </div>
           </header>
 
           <div class="flex-1 flex">
-            <!-- Sidebar -->
-            <aside class="w-60 bg-white border-r border-blue-100 p-3 space-y-1 shrink-0 no-print">
-              <div class="text-[10px] font-bold text-blue-700 uppercase px-3 py-2">Navigasi Utama</div>
-              <button onclick="state.activeTab='dashboard'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Dashboard</button>
-              <button onclick="state.activeTab='items'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'items' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Inventaris Sarana</button>
-              <button onclick="state.activeTab='schools'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg ${state.activeTab === 'schools' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-blue-50'}">Manajemen Sekolah</button>
-              <div class="pt-4 text-[10px] font-bold text-orange-600 uppercase px-3 py-2">Label & Dokumen</div>
-              <button onclick="openF4Modal()" class="w-full text-left px-3 py-2 text-xs font-bold text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100">Cetak 10 Label F4</button>
+            <!-- Sidebar Navigasi -->
+            <aside class="w-60 bg-white border-r border-blue-100 p-3 space-y-1 shrink-0 no-print flex flex-col justify-between">
+              <div class="space-y-1">
+                <div class="text-[10px] font-bold text-blue-700 uppercase px-3 py-2">Navigasi Utama</div>
+                <button onclick="state.activeTab='dashboard'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  📊 Dashboard
+                </button>
+                <button onclick="state.activeTab='items'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'items' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  📦 Inventaris Sarana
+                </button>
+                <button onclick="state.activeTab='rooms'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'rooms' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  🚪 Prasarana Ruangan
+                </button>
+                <button onclick="state.activeTab='loans'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'loans' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  🔄 Peminjaman Sarpras
+                </button>
+                <button onclick="state.activeTab='tickets'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'tickets' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  🔧 Pemeliharaan
+                </button>
+                <button onclick="state.activeTab='schools'; render();" class="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer ${state.activeTab === 'schools' ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-blue-50'}">
+                  🏫 Manajemen Sekolah
+                </button>
+
+                <div class="pt-5 text-[10px] font-bold text-orange-600 uppercase px-3 py-1.5">Cetak & Dokumen</div>
+                <button onclick="openF4Modal()" class="w-full text-left px-3 py-2 text-xs font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 cursor-pointer flex items-center justify-between">
+                  <span>🖨️ Cetak 10 Label F4</span>
+                  <span class="text-[9px] bg-orange-200 text-orange-900 px-1.5 py-0.2 rounded font-mono">Folio</span>
+                </button>
+              </div>
+
+              <!-- Tombol Keluar di Sidebar Bawah -->
+              <div class="pt-4 border-t border-slate-100 mt-4">
+                <button onclick="logout()" class="w-full text-left px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 cursor-pointer flex items-center gap-2 shadow-2xs">
+                  <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                  <span>Keluar dari Akun</span>
+                </button>
+              </div>
             </aside>
 
-            <!-- Main Content Area -->
+            <!-- Konten Utama -->
             <main class="flex-1 p-6 overflow-y-auto">
               ${mainContent}
             </main>
           </div>
         </div>
 
-        <!-- Modal Cetak 10 Label F4 (Folio 215 x 330 mm) -->
+        <!-- Render Modals -->
         ${state.f4ModalOpen ? renderF4ModalHtml() : ''}
+        ${state.addSchoolModalOpen ? renderAddSchoolModalHtml() : ''}
+        ${state.addItemModalOpen ? renderAddItemModalHtml() : ''}
       `;
     }
 
-    // Modal Cetak 10 Label F4
+    // Modal Cetak 10 Label F4 (Folio 215 x 330 mm)
     function renderF4ModalHtml() {
-      const targetItem = state.selectedLabelItem || state.items[0];
-      // Generate 10 identical labels for the sheet
-      const labels = Array(10).fill(targetItem);
+      // Tentukan barang yang sedang dicetak
+      const selectedItem = state.items.find(i => i.id === state.selectedLabelItemId) || state.items[0];
+      // 1 Lembar memuat tepat 10 label (2 Kolom x 5 Baris)
+      const labels = Array(10).fill(selectedItem);
 
       return `
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden">
             <div class="p-4 border-b border-blue-100 flex items-center justify-between no-print bg-blue-50/50">
               <div>
                 <h3 class="text-sm font-bold text-blue-950">Lembar Cetak 10 Label F4 / Folio (215 x 330 mm)</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Memuat Kode Barang, Nama Barang, dan QR Code 2D (2 Kolom x 5 Baris)</p>
+                <p class="text-xs text-slate-500 mt-0.5">Memuat Kode Barang, Nama Barang, dan QR Code 2D (Format 2 Kolom x 5 Baris = 10 Label)</p>
               </div>
               <div class="flex items-center gap-2">
-                <button onclick="window.print()" class="px-4 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer">
+                <!-- Dropdown Pilih Barang -->
+                <select onchange="state.selectedLabelItemId=this.value; render();" class="text-xs font-semibold text-slate-800 border border-slate-300 rounded-lg py-1.5 px-2 bg-white">
+                  ${state.items.map(it => `
+                    <option value="${it.id}" ${it.id === selectedItem.id ? 'selected' : ''}>
+                      ${it.code} - ${it.name}
+                    </option>
+                  `).join('')}
+                </select>
+                <button onclick="window.print()" class="px-4 py-1.5 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-lg shadow-sm cursor-pointer flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H7a2 2 0 00-2 2v4h10z"></path></svg>
                   Cetak Lembar F4
                 </button>
-                <button onclick="state.f4ModalOpen=false; render();" class="p-1.5 text-slate-400 hover:text-slate-700">✕</button>
+                <button onclick="state.f4ModalOpen=false; render();" class="p-1.5 text-slate-400 hover:text-slate-700 cursor-pointer">✕</button>
               </div>
             </div>
 
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100 print:bg-white print:p-0">
-              <div class="mx-auto bg-white p-4 print:p-0 border border-slate-300 print:border-none shadow-md print:shadow-none" style="max-width: 800px;">
-                <div class="grid grid-cols-2 gap-2.5 print:gap-2">
-                  ${labels.map(it => `
-                    <div class="f4-label-card border-2 border-slate-800 rounded-lg p-2.5 bg-white text-slate-900 flex flex-col justify-between" style="min-height: 185px;">
+              <div class="mx-auto bg-white p-4 print:p-0 border border-slate-300 print:border-none shadow-md print:shadow-none" style="max-width: 820px;">
+                <div class="grid grid-cols-2 gap-3 print:gap-2">
+                  ${labels.map((it, idx) => `
+                    <div class="f4-label-card border-2 border-slate-800 rounded-lg p-2.5 bg-white text-slate-900 flex flex-col justify-between" style="min-height: 188px;">
+                      <!-- Kop Label -->
                       <div class="border-b-2 border-slate-800 pb-1 mb-1.5 text-center">
                         <div class="text-[8px] font-bold uppercase text-slate-600">PEMERINTAH DAERAH · DINAS PENDIDIKAN</div>
                         <div class="text-[11px] font-bold text-blue-950">${state.activeSchool.name.toUpperCase()}</div>
-                        <div class="text-[8px] font-mono text-slate-500">LABEL INVENTARIS · NPSN: ${state.activeSchool.npsn}</div>
+                        <div class="text-[8px] font-mono text-slate-500">LABEL INVENTARIS SARPRAS · NPSN: ${state.activeSchool.npsn}</div>
                       </div>
 
+                      <!-- Konten Label: QR Code & Detail Barang -->
                       <div class="flex items-start gap-2.5">
-                        <div class="w-20 h-20 shrink-0 border border-slate-300 p-1 flex flex-col items-center justify-center">
+                        <div class="w-20 h-20 shrink-0 border border-slate-300 p-1 flex flex-col items-center justify-center bg-white rounded">
                           ${generateQrSvg(it.code, 25)}
                           <span class="text-[7px] font-mono font-bold text-slate-600 mt-0.5">SCAN QR</span>
                         </div>
@@ -445,13 +922,16 @@
                           <div class="mt-1 text-[9px] text-slate-600 space-y-0.5">
                             <div>Merk: <strong>${it.brand || '-'}</strong></div>
                             <div>Ruang: <strong>${it.locationName || '-'}</strong></div>
-                            <div>Kondisi: <strong class="text-emerald-700">${it.condition}</strong></div>
+                            <div>Kondisi: <strong class="text-emerald-700">${it.condition}</strong> · Tahun: <strong>${it.acquisitionYear || '-'}</strong></div>
                           </div>
                         </div>
                       </div>
 
-                      <div class="mt-1.5 pt-1 border-t border-slate-200 text-center font-mono text-[8px] text-slate-600">
-                        *${it.code}*
+                      <!-- Footer Barcode & Label Index -->
+                      <div class="mt-1.5 pt-1 border-t border-slate-200 flex items-center justify-between font-mono text-[8px] text-slate-600">
+                        <span>Label #${idx + 1}/10</span>
+                        <span>*${it.code}*</span>
+                        <span>T.A. ${state.activeSchool.academicYear}</span>
                       </div>
                     </div>
                   `).join('')}
@@ -463,13 +943,153 @@
       `;
     }
 
-    // Handlers
+    // Modal Tambah Sekolah Baru
+    function renderAddSchoolModalHtml() {
+      return `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-lg p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="text-base font-bold text-blue-950">Tambah Sekolah Baru</h3>
+              <button onclick="state.addSchoolModalOpen=false; render();" class="text-slate-400 hover:text-slate-700">✕</button>
+            </div>
+            <form onsubmit="handleSaveSchoolSubmit(event)" class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Sekolah</label>
+                <input type="text" id="sch-name" required placeholder="Contoh: SMP Negeri 3 Harapan Bangsa" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">NPSN</label>
+                  <input type="text" id="sch-npsn" required placeholder="20219988" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Jenjang & Status</label>
+                  <select id="sch-level" class="w-full p-2 border border-slate-300 rounded-lg">
+                    <option value="SMP">SMP</option>
+                    <option value="SD">SD</option>
+                    <option value="SMA">SMA</option>
+                    <option value="SMK">SMK</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Alamat Lengkap</label>
+                <input type="text" id="sch-addr" placeholder="Jl. Raya Pelajar No. 1" class="w-full p-2 border border-slate-300 rounded-lg">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Kota / Kabupaten</label>
+                  <input type="text" id="sch-city" placeholder="Kota Pelajar" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Provinsi</label>
+                  <input type="text" id="sch-prov" placeholder="Jawa Barat" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Kepala Sekolah</label>
+                  <input type="text" id="sch-prin" placeholder="Nama & Gelar" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Koordinator Sarpras</label>
+                  <input type="text" id="sch-sarp" placeholder="Nama Koordinator" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+              <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="state.addSchoolModalOpen=false; render();" class="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg shadow-sm">Simpan Sekolah</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // Modal Tambah Barang Baru
+    function renderAddItemModalHtml() {
+      return `
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div class="bg-white rounded-2xl shadow-2xl border border-blue-100 w-full max-w-lg p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="text-base font-bold text-blue-950">Tambah Barang Sarana Baru</h3>
+              <button onclick="state.addItemModalOpen=false; render();" class="text-slate-400 hover:text-slate-700">✕</button>
+            </div>
+            <form onsubmit="handleSaveItemSubmit(event)" class="space-y-3 text-xs">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Kode Barang</label>
+                  <input type="text" id="it-code" required value="SPR-2026-IT-${Math.floor(100 + Math.random() * 900)}" class="w-full p-2 font-mono border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Kategori</label>
+                  <select id="it-cat" class="w-full p-2 border border-slate-300 rounded-lg">
+                    <option value="Elektronik & Multimedia">Elektronik & Multimedia</option>
+                    <option value="Alat Laboratorium">Alat Laboratorium</option>
+                    <option value="Meubelair / Perabot">Meubelair / Perabot</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Barang</label>
+                <input type="text" id="it-name" required placeholder="Contoh: Smart TV 65 Inch Samsung" class="w-full p-2 border border-slate-300 rounded-lg">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Merk / Brand</label>
+                  <input type="text" id="it-brand" placeholder="Samsung / Epson / dll" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Lokasi Ruangan</label>
+                  <select id="it-loc" class="w-full p-2 border border-slate-300 rounded-lg">
+                    ${state.rooms.map(r => `<option value="${r.name}">${r.name}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Spesifikasi Singkat</label>
+                <input type="text" id="it-spec" placeholder="4K UHD, HDMI, Tizen OS" class="w-full p-2 border border-slate-300 rounded-lg">
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Tahun</label>
+                  <input type="number" id="it-year" value="2026" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Jumlah</label>
+                  <input type="number" id="it-qty" value="1" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Harga Satuan (Rp)</label>
+                  <input type="number" id="it-price" value="8500000" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+              <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="state.addItemModalOpen=false; render();" class="px-3 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-sm">Simpan Barang</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // Handler Aksi & Integrasi Google Apps Script
+    function setLoginQuick(user, pass) {
+      const uField = document.getElementById('login-username');
+      const pField = document.getElementById('login-password');
+      if (uField) uField.value = user;
+      if (pField) pField.value = pass;
+      const errBox = document.getElementById('login-error');
+      if (errBox) errBox.classList.add('hidden');
+    }
+
     function handleLoginSubmit(e) {
       e.preventDefault();
       const user = document.getElementById('login-username').value.trim();
       const pass = document.getElementById('login-password').value.trim();
 
-      // Check against server via google.script.run if present, or fallback
+      // Jika dijalankan di dalam Google Apps Script (Web App terhubung)
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(function(res) {
@@ -477,17 +1097,25 @@
               state.currentUser = res.user;
               render();
             } else {
-              showLoginError(res.message || 'Username atau password salah.');
+              showLoginError(res.message || 'Username atau password tidak cocok.');
             }
+          })
+          .withFailureHandler(function(err) {
+            showLoginError('Terjadi kendala koneksi ke database Google Sheets: ' + err);
           })
           .apiLogin(user, pass);
       } else {
-        // Standalone / Offline check
+        // Fallback Mandiri / Pratinjau Lokal
         if ((user === 'admin' && pass === 'admin123') || (user === 'guru' && pass === 'guru123') || (user === 'teknisi' && pass === 'teknisi123')) {
-          state.currentUser = { username: user, fullName: user === 'admin' ? 'Yana Maulana (Admin)' : 'Pengguna Sekolah' };
+          state.currentUser = {
+            id: 'usr-local',
+            username: user,
+            fullName: user === 'admin' ? 'Yana Maulana, S.Pd., M.Kom.' : (user === 'guru' ? 'Siti Rohmah, S.Pd.' : 'Agus Triono'),
+            role: user === 'admin' ? 'admin_sarpras' : (user === 'guru' ? 'guru_peminjam' : 'teknisi')
+          };
           render();
         } else {
-          showLoginError('Username atau password yang Anda masukkan salah.');
+          showLoginError('Username atau password yang Anda masukkan tidak sesuai.');
         }
       }
     }
@@ -506,11 +1134,7 @@
     }
 
     function openF4Modal(itemId) {
-      if (itemId) {
-        state.selectedLabelItem = state.items.find(i => i.id === itemId);
-      } else {
-        state.selectedLabelItem = state.items[0];
-      }
+      state.selectedLabelItemId = itemId || (state.items[0] ? state.items[0].id : null);
       state.f4ModalOpen = true;
       render();
     }
@@ -524,29 +1148,109 @@
     }
 
     function openAddSchoolModal() {
-      const newName = prompt('Masukkan Nama Sekolah Baru:');
-      if (newName && newName.trim()) {
-        const newNpsn = prompt('Masukkan NPSN Sekolah:', '2021' + Math.floor(1000 + Math.random() * 9000));
-        const newSchool = {
-          id: 'sch-' + Date.now(),
-          name: newName.trim(),
-          npsn: (newNpsn || '20210000').trim(),
-          level: 'SMP',
-          status: 'Negeri',
-          city: 'Kota Pelajar',
-          province: 'Jawa Barat',
-          principal: 'Kepala Sekolah Baru',
-          sarprasHead: 'Koordinator Sarpras',
-          academicYear: '2025/2026 Ganjil'
-        };
-        state.schools.push(newSchool);
-        state.activeSchool = newSchool;
-        
-        // Simpan ke Google Sheet jika ada backend
+      state.addSchoolModalOpen = true;
+      render();
+    }
+
+    function openAddItemModal() {
+      state.addItemModalOpen = true;
+      render();
+    }
+
+    function handleSaveSchoolSubmit(e) {
+      e.preventDefault();
+      const newSchool = {
+        id: 'sch-' + Date.now(),
+        name: document.getElementById('sch-name').value.trim(),
+        npsn: document.getElementById('sch-npsn').value.trim(),
+        level: document.getElementById('sch-level').value,
+        status: 'Negeri',
+        address: document.getElementById('sch-addr').value.trim(),
+        city: document.getElementById('sch-city').value.trim() || 'Kota Pelajar',
+        province: document.getElementById('sch-prov').value.trim() || 'Jawa Barat',
+        principal: document.getElementById('sch-prin').value.trim() || 'Kepala Sekolah',
+        sarprasHead: document.getElementById('sch-sarp').value.trim() || 'Koordinator Sarpras',
+        academicYear: '2025/2026 Ganjil'
+      };
+
+      state.schools.push(newSchool);
+      state.activeSchool = newSchool;
+      state.addSchoolModalOpen = false;
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiSaveSchool(newSchool);
+      }
+      render();
+    }
+
+    function handleSaveItemSubmit(e) {
+      e.preventDefault();
+      const newItem = {
+        id: 'it-' + Date.now(),
+        code: document.getElementById('it-code').value.trim(),
+        name: document.getElementById('it-name').value.trim(),
+        category: document.getElementById('it-cat').value,
+        brand: document.getElementById('it-brand').value.trim(),
+        specification: document.getElementById('it-spec').value.trim(),
+        condition: 'Baik',
+        status: 'Tersedia',
+        locationName: document.getElementById('it-loc').value,
+        acquisitionYear: Number(document.getElementById('it-year').value) || 2026,
+        price: Number(document.getElementById('it-price').value) || 0,
+        quantity: Number(document.getElementById('it-qty').value) || 1,
+        unit: 'Unit'
+      };
+
+      state.items.unshift(newItem);
+      state.addItemModalOpen = false;
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiSaveItem(newItem);
+      }
+      render();
+    }
+
+    function deleteItem(itemId) {
+      if (confirm('Yakin ingin menghapus data sarana ini?')) {
+        state.items = state.items.filter(i => i.id !== itemId);
         if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.apiSaveSchool(newSchool);
+          google.script.run.apiDeleteItem(itemId);
         }
         render();
+      }
+    }
+
+    function returnLoan(loanId) {
+      const loan = state.loans.find(l => l.id === loanId);
+      if (loan) {
+        loan.status = 'Dikembalikan';
+        loan.actualReturnDate = new Date().toISOString().split('T')[0];
+        const item = state.items.find(i => i.id === loan.itemId);
+        if (item) item.status = 'Tersedia';
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run.apiReturnLoan(loanId, loan.actualReturnDate, 'Baik', 'Selesai');
+        }
+        render();
+      }
+    }
+
+    // Sinkronisasi Data dengan Google Apps Script Saat Dimuat
+    function syncWithGoogleAppsScript() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            if (data) {
+              if (data.schools && data.schools.length > 0) state.schools = data.schools;
+              if (data.activeSchool) state.activeSchool = data.activeSchool;
+              if (data.items && data.items.length > 0) state.items = data.items;
+              if (data.rooms && data.rooms.length > 0) state.rooms = data.rooms;
+              if (data.loans && data.loans.length > 0) state.loans = data.loans;
+              if (data.tickets && data.tickets.length > 0) state.tickets = data.tickets;
+              render();
+            }
+          })
+          .apiGetAllData();
       }
     }
 
